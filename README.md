@@ -1,4 +1,4 @@
-# MCMonitorVB
+# MCMonitorPerl
 
 Working on a monitoring page for our network of Minecraft and Source servers so I can see the overall health of the network at a glance.
 
