@@ -109,7 +109,7 @@ sub index :Path :Args(0) {
         );
 
         # detect a failed connection as best we can and process based on server up or down state
-        # TODO: detect web server outage and pause checking
+        # TODO: see if we can detect other web issues besides web service down and that affect all servers
         my $serverdata = undef;
         if ( $jsondata =~ /Failed to connect/ || $jsondata =~ /Connection refused/ ||
              $jsondata eq '' ) {
@@ -144,12 +144,12 @@ sub index :Path :Args(0) {
                 #
                 # SOURCE
                 #
-                # {"Protocol":17,"HostName":"OB-CounterStrike","Map":"cs_militia","ModDir":"csgo",
+                # {"Protocol":17,"HostName":"CounterStrike","Map":"cs_militia","ModDir":"csgo",
                 #  "ModDesc":"Counter-Strike: Global Offensive","AppID":730,"Players":0,"MaxPlayers":30,"Bots":0,
                 #  "Dedicated":"d","Os":"l","Password":false,"Secure":true,"Version":"1.37.4.0",
                 #  "ExtraDataFlags":161,"GamePort":27015,"GameTags":"empty,secure","GameID":730}
 
-                # {"Protocol":17,"HostName":"OB-GMod Server - PVP Sandbox * M9K|Simfp|Gredwitch|LFS| NoRank!",
+                # {"Protocol":17,"HostName":"GMod Server - PVP Sandbox * M9K|Simfp|Gredwitch|LFS| NoRank!",
                 #  "Map":"gmod_fort_map","ModDir":"garrysmod","ModDesc":"Sandbox","AppID":4000,"Players":0,"MaxPlayers":16,
                 #  "Bots":0,"Dedicated":"d","Os":"l","Password":false,"Secure":true,"Version":"2019.11.12",
                 #  "ExtraDataFlags":177,"GamePort":27016,"SteamID":90132776141476868,"GameTags":" gm:sandbox","GameID":4000}
@@ -175,7 +175,7 @@ sub index :Path :Args(0) {
                 #  MINECRAFT
                 # 
                 #  {"description": {"text":""},
-                #   "players":{"max":10,"online":1,"sample":[{"id":"175d4ce8-cc2e-47fe-bfa5-89e711c89084","name":"sean_ob"}]},
+                #   "players":{"max":10,"online":1,"sample":[{"id":"145d43e8-cc3e-433e-baa4-81e711c6880a","name":"botch"}]},
                 #   "version":{"name":"Spigot 1.15.2","protocol":578},"favicon":"data:image/png;base64,..."}
      
                 #  {"description":"",
@@ -271,6 +271,15 @@ sub index :Path :Args(0) {
                     }
                 );
             }
+
+            # update last check timestamp
+            my $lastchecked = substr( gettimestamp(), 1, length( gettimestamp() ) - 7 );
+            $server->update(
+                {
+                    lastchecked => $lastchecked
+                }
+            );
+
         }
     }
 
@@ -289,6 +298,12 @@ sub index :Path :Args(0) {
     # get current servers status
 
     $c->response->header( 'Cache-Control' => 'no-cache' ); 
+
+    # refresh our data as it has changed
+    $serverlist = [ $c->model( 'DB::Servers' )->search(
+        { },
+        { order_by => 'servername DESC' }
+    ) ];
 
     # load up our template with our data
     $c->stash( 
