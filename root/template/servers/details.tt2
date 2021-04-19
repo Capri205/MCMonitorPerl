@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset = "utf8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="../../static/css/bootstrap.css" rel="stylesheet">
+    <link href="../../static/css/site.css" rel="stylesheet">
+
+    <script src="../../static/js/modernizr-2.8.3.js"></script>
+
+    [% title = "Server Details" %]
+
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">MCMonitor</a>
+        </div>
+        <div class="navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="/monitor">Monitor</a></li>
+            <li><a href="/servers">Servers</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container body-content">
+
+
+      <h2>[% title %]</h2>
+      <h4>Details for <span class="strong">[% server.servername %]</span></h4>
+  
+      <hr />
+
+      <dl class="dl-horizontal">
+        <dt>Servername</dt>
+        <dd>[% server.servername %]</dd>
+         
+        <dt>Description</dt>
+        <dd>[% server.description %]</dd>
+
+        <dt>Engine Type</dt>
+        <dd>[% server.enginetype %]</dd>
+
+        <dt>Engine Version</dt>
+        <dd>[% server.engineversion %]</dd>
+
+        <dt>Server Version</dt>
+        <dd>[% server.serverversion %]</dd>
+
+        <dt>Hostname</dt>
+        <dd>[% server.hostname %]</dd>
+
+        <dt>IP Address</dt>
+        <dd>[% server.ipaddress %]</dd>
+
+        <dt>Port</dt>
+        <dd>[% server.port %]</dd>
+
+        <dt>Maintenance Mode</dt>
+        [% IF server.maintenancemode == 1 %]
+          <dd>Yes</dd>
+        [% ELSE %]
+          <dd>No</dd>
+        [% END %]
+
+      </dl>
+      <dl class="dl-horizontal">
+        <dt>Connected players</dt>
+        <dd>[% server.numconnections %]</dd>
+
+        <dt>Last checked</dt>
+        <dd>[% server.lastchecked %]</dd>
+      </dl>
+
+      <div>
+        <a href="/servers/edit/[% server.servername %]">Edit</a>&nbsp;|&nbsp;
+        <a href="/servers">Back to server list</a>
+      </div>
+
+      <hr />
+      <span class="message">[% status_msg %]</span>
+      <span class="error">[% error_msg %]</span>
+      <hr />
+
+      <footer>
+        <p>&copy; 2021 - MCMonitor</p>
+    </div>
+
+    <script src="../../static/js/jquery-3.4.1.js"></script>
+    <script src="../../static/js/bootstrap.js"></script>
+    <script src="../../static/js/jquery.validate.js"></script>
+    <script src="../../static/js/jquery.validate.unobtrusive.js"></script>
+
+  </body>
+</html>

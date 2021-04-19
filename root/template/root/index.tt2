@@ -1,0 +1,168 @@
+<html>
+  <head>
+    <meta charset = "utf8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="static/css/bootstrap.css" rel="stylesheet">
+    <link href="static/css/site.css" rel="stylesheet">
+
+    <script src="static/js/modernizr-2.8.3.js"></script>
+
+    [% title = "Server Dashboard" %]
+    [% currEngine = "NaN" %]
+  
+    [% sound = 'sounds' %]
+    [% IF globalstate.${sound}.playalarmsound == "true" %]
+      <audio src="static/sounds/alarm.wav" autoplay="autoplay" preload="auto"></audio>
+    [% ELSIF globalstate.${sound}.playjoinsound == "true" %]
+      <audio src="static/sounds/joined.wav" autoplay="autoplay" preload="auto"></audio>
+    [% ELSIF globalstate.${sound}.playleavesound == "true" %]
+      <audio src="static/sounds/departed.wav" autoplay="autoplay" preload="auto"></audio>
+    [% END %]
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">MCMonitor</a>
+        </div>
+        <div class="navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="monitor">Monitor</a></li>
+            <li><a href="servers">Servers</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container body-content">
+
+      <meta http-equiv="refresh" content="30">
+
+      <h2>[% title %]</h2>
+  
+      <table class="table">
+        <thead>
+          <tr>
+            <th>
+              Servername
+            </th>
+            <th>
+              Up/Down
+            </th>
+            <th>
+              Players
+            </th>
+            <th>
+              LastChecked
+            </th>
+            <th>
+              PlayerJoinHistory
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+
+          [% FOREACH server IN serverlist %]
+
+            [% servername = server.servername %]
+            [% IF currEngine != server.enginetype %]
+              [% IF currEngine != "NaN" %]
+                <tr>
+                  <td style="background-color:lightgray" height="10"></td>
+                  <td style="background-color:lightgray"></td>
+                  <td style="background-color:lightgray"></td>
+                  <td style="background-color:lightgray"></td>
+                  <td style="background-color:lightgray"></td>
+                </tr>
+              [% END %]
+              [% currEngine = server.enginetype %]
+            [% END %]
+
+            <tr>
+              <td>
+                [% server.servername %]
+                [% IF server.maintenancemode == 1 %]
+                  <text>(m)</text>
+                [% END %]
+              </td>
+              <td>
+                [% IF server.isup == 1 %]
+                  <img src="static/images/green_check_mark_circle.png" style="width:40px;height:40px" />
+                [% ELSIF server.maintenancemode == 0 %]
+                    <div><blink>
+                      <img src="static/images/red_batsu_mark_circle.png" style="width:40px;height:40px" />
+                    </blink></div>
+                [% ELSE %]
+                    <img src="static/images/red_batsu_mark_circle.png" style="width:40px;height:40px" />
+                [% END %]
+              </td>
+              <td>
+                [% IF globalstate.jointrackerdirection.${servername} == "Up" %]
+                  <p>
+                    <span style="color:green; font:bold"><blink>
+                      [% server.numconnections %]
+                    </blink></span>
+                  </p>
+                [% ELSIF globalstate.jointrackerdirection.${servername} == "Down" %]
+                    <p>
+                      <span style="color:red; font:bold"><blink>
+                        [% server.numconnections %]
+                      </blink></span>
+                    </p>
+                [% ELSE %]
+                    [% server.numconnections %]
+                [% END %]
+              </td>
+              <td>
+                [% server.lastchecked %]
+              </td>
+              <td>
+                <font style="font-size:10px">
+                  [% count = 1 %]
+                  [% FOREACH entry IN globalstate.playertracker.${servername}.as_list %]
+                    [% IF count % 2 == 0 %]
+                      [% IF count == 2 %]
+                        [% IF globalstate.jointrackerdirection.${servername} == "Up" %]
+                          <span style="color:mediumvioletred">
+                            [% entry %] @ [% datepart %]<br>
+                          </span>
+                        [% ELSE %]
+                            [% entry %] @ [% datepart %]<br>
+                        [% END %]
+                      [% ELSE %]
+                        [% entry %] @ [% datepart %]<br>
+                      [% END %]
+                    [% ELSE %]
+                      [% datepart = entry.substr(0,14) %]
+                    [% END %]
+                    [% count = count + 1 %]
+                  [% END %]
+                </font>
+              </td>
+            </tr>
+          [% END %]
+        </tbody>
+      </table>
+
+      <hr />
+      <span class="message">[% status_msg %]</span>
+      <span class="error">[% error_msg %]</span>
+      <hr />
+
+      <footer>
+        <p>&copy; 2021 - MCMonitor</p>
+      </footer>
+  
+    </div>
+    <script src="static/js/jquery-3.4.1.js"></script>
+    <script src="static/js/bootstrap.js"></script>
+  </body>
+</html>
