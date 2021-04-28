@@ -111,8 +111,8 @@ sub index :Path :Args(0) {
         # detect a failed connection as best we can and process based on server up or down state
         # TODO: see if we can detect other web issues besides web service down and that affect all servers
         my $serverdata = undef;
-        if ( $jsondata =~ /Failed to connect/ || $jsondata =~ /Connection refused/ ||
-             $jsondata eq '' ) {
+        if ( $jsondata =~ /Failed to connect/ or $jsondata =~ /Connection refused/ or
+             $jsondata =~ /Failed to read any data from socket/ or $jsondata eq '' ) {
 
             # no response from server so update database accordingly
             $server->update(
@@ -133,6 +133,7 @@ sub index :Path :Args(0) {
         } else {
 
             # convert the web query to something we can process in perl
+            $c->log->debug("debug - jsondata: " . $jsondata);
             $serverdata = from_json( $jsondata );
 
             # reset some server and global states, just in case something was down and is now up
@@ -465,14 +466,14 @@ sub checkwebserverstatus {
     my $pinger = Net::Ping->new( 'tcp' );
     $pinger->port_number(443);
     foreach my $line ( $pinger->ping('ob-mc.net') ) {
-        if ( $line == 0 || $line == 1 ) {
-            $c->log->info("Web server ping result was " . $line);
-            $status = $line;
+        if ( $line =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/ ) {
+            $c->log->info("Web server address reported as " . $line );
         } elsif ( $line =~ /^\d\.\d+$/ ) {
             chomp( $line );
             $c->log->info("Web server ping took " . $line . "ms");
-        } elsif ( $line =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/ ) {
-            $c->log->info("Web server address reported as " . $line );
+        } elsif ( $line == 0 || $line == 1 ) {
+            $c->log->info("Web server ping result was " . $line);
+            $status = $line;
         }
     }
     
