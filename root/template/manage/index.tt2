@@ -38,24 +38,10 @@
 
       <h2>[% title %]</h2>
 
-      <p>
-        <a href="servers/create">Create New</a>
-      </p>
-
-
       <table class="table">
         <tr>
           <th>
             Servername
-          </th>
-          <th>
-            Engine
-          </th>
-          <th>
-            Engine Version
-          </th>
-          <th>
-            Server Version
           </th>
           <th>
             Hostname
@@ -70,6 +56,7 @@
             Maintenance Mode
           </th>
           <th>
+            Action
           </th>
         </tr>
     
@@ -77,15 +64,6 @@
           <tr>
             <td>
               [% server.servername %]
-            </td>
-            <td>
-              [% server.enginetype %]
-            </td>
-            <td>
-              [% server.engineversion %]
-            </td>
-            <td>
-              [% server.serverversion %]
             </td>
             <td>
               [% server.hostname %]
@@ -104,9 +82,11 @@
               [% END %]
             </td>
             <td>
-              <a href="servers/edit/[% server.servername %]">Edit</a> |
-              <a href="servers/details/[% server.servername %]">Details</a> |
-              <a href="servers/delete/[% server.servername %]">Delete</a>
+              [% IF server.isup %]
+                <a href="manage/stop/[% server.servername %]">Stop</a>
+              [% ELSE %]
+                <a href="manage/start/[% server.servername %]">Start</a>
+              [% END %]
             </td>
           </tr>
         [% END %]
