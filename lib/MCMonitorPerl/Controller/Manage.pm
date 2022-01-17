@@ -10,7 +10,7 @@ BEGIN { extends 'Catalyst::Controller'; }
 
 =cut
 
-my @identityfiles = ( $ENV{HOME} . "/.ssh/sean-pc-oss.ppk" );
+my @identityfiles = ( $ENV{HOME} . "/.ssh/id_rsa" );
 my %sshparams = (
     protocol => '2,1',
     port => 8105,
