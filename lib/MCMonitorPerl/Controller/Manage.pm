@@ -77,14 +77,14 @@ sub start :Path('start') Args(1) {
 
     # execute command
     my $cmd = $self->buildcmd( $c, $server, "start" );
+    $c->log->debug("Executing: $cmd");
     my ( $stdout, $stderr, $rtncode ) = $sshcon->cmd( $cmd );
+    $c->log->debug("stdout: " . $stdout);
+    $c->log->debug("stderr: " . $stderr);
+    $c->log->debug("rtncode: " . $rtncode);
     if ( $rtncode != 0 ) {
         $c->response->body( "Error exectuing command: $cmd");
         return;
-    } else {
-        $c->log->debug("stdout: " . $stdout);
-        $c->log->debug("stderr: " . $stderr);
-        $c->log->debug("rtncode: " . $rtncode);
     }
 
     # update status in database as starting
@@ -126,14 +126,14 @@ sub stop :Path('stop') Args(1) {
 
     # execute command
     my $cmd = $self->buildcmd( $c, $server, "stop" );
+    $c->log->debug("Executing: $cmd");
     my ( $stdout, $stderr, $rtncode ) = $sshcon->cmd( $cmd );
+    $c->log->debug("stdout: " . $stdout);
+    $c->log->debug("stderr: " . $stderr);
+    $c->log->debug("rtncode: " . $rtncode);
     if ( $rtncode != 0 ) {
         $c->response->body( "Error exectuing command: $cmd");
         return;
-    } else {
-        $c->log->debug("stdout: " . $stdout);
-        $c->log->debug("stderr: " . $stderr);
-        $c->log->debug("rtncode: " . $rtncode);
     }
 
     # update status in database as stopping
@@ -176,7 +176,16 @@ sub buildcmd {
     my $rtncmd = "/Minecraft/mcserver.sh\ ";
     if ( $server eq "ob-traincraft" ) {
         $rtncmd = "ob-traincraft" . $rtncmd . $action;
+    } elsif ( $server eq "ob-orespawn" ) {
+        $rtncmd = "ob-orespawn" . $rtncmd . $action;
+    } elsif ( $server eq "ob-twilight" ) {
+        $rtncmd = "ob-twilight" . $rtncmd . $action;
+    } elsif ( $server eq "ob-lobby" ) {
+        $rtncmd = "ob-lobby" . $rtncmd . $action;
+    } elsif ( $server eq "ob-build" ) {
+        $rtncmd = "ob-build" . $rtncmd . $action;
     }
+
     return $rtncmd;
 }
 
