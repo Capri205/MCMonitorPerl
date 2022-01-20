@@ -121,14 +121,17 @@ sub index :Path :Args(0) {
                     isup => $isup
                 }
             );
+
             # trigger alarm sound if we've seen this condition for a number of consecutive checks
-            if ( $server->get_column('maintenancemode') eq 0 ) {
+            if ( $server->get_column( 'maintenancemode' ) eq 0 ) {
                 if ( $globalstate{ 'eventtracker' }->{ $servername } < $MAXCHECKSB4ALARM ) {
                     $globalstate{ 'eventtracker' }->{ $servername } += 1;
                 } else {
-                    $globalstate{'sounds'}->{'playalarmsound'} = "true";
+                    $globalstate{ 'sounds' }->{ 'playalarmsound' } = "true";
                 }
             }
+            # set states so that things dont persist - like blinking text etc
+            $globalstate{ 'jointrackerdirection' }->{ $servername } = "NoChange";
 
         } else {
 
