@@ -40,8 +40,6 @@ Catalyst Controller.
 sub index :Path :Args(0) {
     my ( $self, $c ) = @_;
 
-    $c->log->debug("debug - in Manage index");
-
     $c->stash( serverlist => [ $c->model( 'DB::Servers' )->all ] );
 
     $c->stash( template => 'template/manage/index.tt2' );
@@ -55,42 +53,34 @@ sub start :Path('start') Args(1) {
     my ( $self, $c, $server ) = @_;
 
     my %p = %{$c->request->params};
-    $c->log->debug("------- %p -------");
-    $c->log->debug(%p);
-    $c->log->debug("------------------");
-    $c->log->debug("server: $server");
-    $c->log->debug("debug - in Manage start");
 
     # get server data from database
     my $serverdata = $c->model( 'DB::Servers' )->find(
         { servername => $server },
     );
     if ( !defined( $serverdata ) or $serverdata eq '' ) {
-        $c->response->body( $server . " - not found. Please check your server list" );
+        $c->response->body( "Something went terribly wrong.<br>" . $server . " - not found. Please check your server list" );
         return;
     }
-    my $host = $serverdata->get_column('hostname');
-    $c->log->debug("hostname for $server is $host");
+    my $host = $serverdata->get_column( 'hostname' );
 
     # get our ssh connection
     my $sshcon = $self->getsshconnection( $c, $host );
 
     # execute command
     my $cmd = $self->buildcmd( $c, $server, "start" );
-    $c->log->debug("Executing: $cmd");
     my ( $stdout, $stderr, $rtncode ) = $sshcon->cmd( $cmd );
-    $c->log->debug("stdout: " . $stdout);
-    $c->log->debug("stderr: " . $stderr);
-    $c->log->debug("rtncode: " . $rtncode);
     if ( $rtncode != 0 ) {
-        $c->response->body( "Error exectuing command: $cmd");
+        $c->response->body( "Something went terribly wrong.<br>Error executing command: $cmd");
         return;
     }
 
     # update status in database as starting
-    $serverdata->update({
-        isup => 3
-    });
+    $serverdata->update(
+        {
+            state => "Starting"
+        }
+    );
 
     # redirect to our monitoring page
     $c->response->redirect( "/" );
@@ -104,42 +94,34 @@ sub stop :Path('stop') Args(1) {
     my ( $self, $c, $server ) = @_;
 
     my %p = %{$c->request->params};
-    $c->log->debug("------- %p -------");
-    $c->log->debug(%p);
-    $c->log->debug("------------------");
-    $c->log->debug("server: $server");
-    $c->log->debug("debug - in Manage stop");
 
     # get server data from database
     my $serverdata = $c->model( 'DB::Servers' )->find(
         { servername => $server },
     );
     if ( !defined( $serverdata ) or $serverdata eq '' ) {
-        $c->response->body( $server . " - not found. Please check your server list" );
+        $c->response->body( "Something went terribly wrong<br>" . $server . " - not found. Please check your server list" );
         return;
     }
-    my $host = $serverdata->get_column('hostname');
-    $c->log->debug("hostname for $server is $host");
+    my $host = $serverdata->get_column( 'hostname' );
 
     # get our ssh connection
     my $sshcon = $self->getsshconnection( $c, $host );
 
     # execute command
     my $cmd = $self->buildcmd( $c, $server, "stop" );
-    $c->log->debug("Executing: $cmd");
     my ( $stdout, $stderr, $rtncode ) = $sshcon->cmd( $cmd );
-    $c->log->debug("stdout: " . $stdout);
-    $c->log->debug("stderr: " . $stderr);
-    $c->log->debug("rtncode: " . $rtncode);
     if ( $rtncode != 0 ) {
-        $c->response->body( "Error exectuing command: $cmd");
+        $c->response->body( "Something went terribly wrong<br>Error executing command: $cmd");
         return;
     }
 
     # update status in database as stopping
-    $serverdata->update({
-        isup => 4
-    });
+    $serverdata->update(
+        {
+            state => "Stopping"
+        }
+    );
 
     # redirect to our monitoring page
     $c->response->redirect( "/" );
@@ -173,7 +155,7 @@ sub getsshconnection {
 sub buildcmd {
     my ( $self, $c, $server, $action ) = @_;
 
-    my $rtncmd = "/Minecraft/mcserver.sh\ ";
+    my $rtncmd = "/mcserver.sh\ ";
     if ( $server eq "ob-traincraft" ) {
         $rtncmd = "ob-traincraft" . $rtncmd . $action;
     } elsif ( $server eq "ob-orespawn" ) {

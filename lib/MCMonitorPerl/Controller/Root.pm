@@ -22,10 +22,13 @@ our %globalstate = (
     'playertracker' => {},
     'eventtracker' => {},
     'jointrackerconcount' => {},
-    'jointrackerdirection' => {}
+    'jointrackerdirection' => {},
+    'statetracker' => {}
 );
 our $MAXCHECKSB4ALARM = 3;
 our $MAXPLAYERSTORE = 5;
+our $MAXSTARTINGSTATECHECKS = 3;
+our $MAXSTOPPINGSTATECHECKS = 1;
 
 
 BEGIN { extends 'Catalyst::Controller' }
@@ -95,6 +98,7 @@ sub index :Path :Args(0) {
         $numconnections = 0;
 
         my $servername = $server->get_column( 'servername' );
+        $c->log->debug("in main with $servername, current state: " . $server->get_column( 'state' ) . ", isup: " . $server->get_column( 'isup' ));
 
         # set up a server entry in our state tracker if not there
         $self->setupstateentry( $c, $servername );
@@ -113,30 +117,60 @@ sub index :Path :Args(0) {
         my $serverdata = undef;
         if ( $jsondata =~ /Failed to connect/ or $jsondata =~ /Connection refused/ or
              $jsondata =~ /Failed to read any data from socket/ or $jsondata eq '' ) {
+             
+            if ( $server->get_column( 'state' ) eq "Starting" ) {
+                # play the server starting animation for however many monitoring cycles
+                $c->log->debug("Server $servername is starting state, but still cannot connect");
+                $globalstate{ 'statetracker' }->{ $servername } += 1;
+                $c->log->debug("statetracker for $servername is " . $globalstate{ 'statetracker' }->{ $servername } );
 
-            # no response from server so update database accordingly
-            $server->update(
-                {
-                    numconnections => $numconnections,
-                    isup => $isup
-                }
-            );
-
-            # trigger alarm sound if we've seen this condition for a number of consecutive checks
-            if ( $server->get_column( 'maintenancemode' ) eq 0 ) {
-                if ( $globalstate{ 'eventtracker' }->{ $servername } < $MAXCHECKSB4ALARM ) {
-                    $globalstate{ 'eventtracker' }->{ $servername } += 1;
+            } elsif ( $server->get_column( 'state' ) eq "Stopping" ) {
+                # just play the stopping animation for however monitoring cycles
+                if ( $globalstate{ 'statetracker' }->{ $servername } >= $MAXSTOPPINGSTATECHECKS ) {
+                    $globalstate{ 'statetracker' }->{ $servername } = 0;
+                    $server->update(
+                        {
+                            numconnections => $numconnections,
+                            isup => $isup,
+                            state => "Down"
+                        }
+                    );
                 } else {
-                    $globalstate{ 'sounds' }->{ 'playalarmsound' } = "true";
+                    $c->log->debug("Server $servername is stopping state transition");
+                    $globalstate{ 'statetracker' }->{ $servername } += 1;
+                    $c->log->debug("statetracker for $servername is " . $globalstate{ 'statetracker' }->{ $servername } );
                 }
+            } else {
+             
+                # no response from server so update database accordingly
+                $server->update(
+                    {
+                        numconnections => $numconnections,
+                        isup => $isup,
+                        state => "Down"
+                    }
+                );
+                $globalstate{ 'statetracker' }->{ $servername } = 0;
+
+                # trigger alarm sound if we've seen this condition for a number of consecutive checks
+                if ( $server->get_column( 'maintenancemode' ) eq 0 ) {
+                    if ( $globalstate{ 'eventtracker' }->{ $servername } < $MAXCHECKSB4ALARM ) {
+                        $globalstate{ 'eventtracker' }->{ $servername } += 1;
+                    } else {
+                        $globalstate{ 'sounds' }->{ 'playalarmsound' } = "true";
+                    }
+                }
+                # set states so that things dont persist - like blinking text etc
+                $globalstate{ 'jointrackerdirection' }->{ $servername } = "NoChange";
             }
-            # set states so that things dont persist - like blinking text etc
-            $globalstate{ 'jointrackerdirection' }->{ $servername } = "NoChange";
+            
+            $c->log->debug("State for $servername is " . $server->get_column( 'state' ));            
+            $c->log->debug("statetracker for $servername is " . $globalstate{ 'statetracker' }->{ $servername } );
 
         } else {
 
             # convert the web query to something we can process in perl
-            $c->log->debug("debug - jsondata: " . $jsondata);
+#            $c->log->debug("debug - jsondata: " . $jsondata);
             $serverdata = from_json( $jsondata );
 
             # reset some server and global states, just in case something was down and is now up
@@ -283,6 +317,35 @@ sub index :Path :Args(0) {
                     lastchecked => $lastchecked
                 }
             );
+
+            # manage state - give starting or stopping a few monitoring cycles
+            if ( $server->get_column( 'state' ) eq "Starting" ) {
+                if ( $globalstate{ 'statetracker' }->{ $servername } >= $MAXSTARTINGSTATECHECKS ) {
+                    $globalstate{ 'statetracker' }->{ $servername } = 0;
+                    $server->update(
+                        {
+                            state => "Running"
+                        }
+                    );
+                } else {
+                    $globalstate{ 'statetracker' }->{ $servername } += 1;
+                }
+            }
+            if ( $server->get_column( 'state' ) eq "Stopping" ) {
+                if ( $globalstate{ 'statetracker' }->{ $servername } >= $MAXSTOPPINGSTATECHECKS ) {
+                    $globalstate{ 'statetracker' }->{ $servername } = 0;
+                    $server->update(
+                        {
+                            state => "Down"
+                        }
+                    );
+                } else {
+                    $globalstate{ 'statetracker' }->{ $servername } += 1;
+                }
+                
+            }
+            $c->log->debug("State for $servername is " . $server->get_column( 'state' ));
+            $c->log->debug("statetracker for $servername is " . $globalstate{ 'statetracker' }->{ $servername } );
 
         }
     }

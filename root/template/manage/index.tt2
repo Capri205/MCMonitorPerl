@@ -56,6 +56,9 @@
             Maintenance Mode
           </th>
           <th>
+            State
+          </th>
+          <th>
             Action
           </th>
         </tr>
@@ -80,6 +83,9 @@
               [% ELSE %]
                 No
               [% END %]
+            </td>
+            <td>
+              [% server.state %]
             </td>
             <td>
               [% IF server.isup %]
