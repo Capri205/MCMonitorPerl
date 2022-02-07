@@ -10,6 +10,8 @@ use Net::Ping;
 use Hash::Ordered;
 use Time::HiRes qw( usleep gettimeofday );
 use POSIX qw( strftime );
+use MCMonitorPerl::SocketConnection;
+
 
 
 # setup a global state tracker and some global limits
@@ -23,7 +25,8 @@ our %globalstate = (
     'eventtracker' => {},
     'jointrackerconcount' => {},
     'jointrackerdirection' => {},
-    'statetracker' => {}
+    'statetracker' => {},
+    'lasterror' => {}
 );
 our $MAXCHECKSB4ALARM = 3;
 our $MAXPLAYERSTORE = 5;
@@ -73,9 +76,9 @@ sub index :Path :Args(0) {
     }
 
     # reset our sound prompts each check
-    $globalstate{'sounds'}->{'playjoinsound'} = "false";
-    $globalstate{'sounds'}->{'playleavesound'} = "false";
-    $globalstate{'sounds'}->{'playalarmsound'} = "false";
+    $globalstate{ 'sounds' }->{ 'playjoinsound' } = "false";
+    $globalstate{ 'sounds' }->{ 'playleavesound' } = "false";
+    $globalstate{ 'sounds' }->{ 'playalarmsound' } = "false";
 
     # get server list from database
     my $serverlist = [ $c->model( 'DB::Servers' )->search(
@@ -103,21 +106,37 @@ sub index :Path :Args(0) {
         # set up a server entry in our state tracker if not there
         $self->setupstateentry( $c, $servername );
 
+#        my $jsondata = $self->getserverstatus(
+#            $c, $ua,
+#            $server->get_column( 'ipaddress' ),
+#            $server->get_column( 'port' ),
+#            $serverengine
+#        );
+#        $c->log->debug(Dumper($jsondata));
+
         my $serverengine = $server->get_column('enginetype');
 
-        my $jsondata = $self->getserverstatus(
-            $c, $ua,
-            $server->get_column( 'ipaddress' ),
-            $server->get_column( 'port' ),
-            $serverengine
-        );
+        # ping the server to see if it's alive and get some basic ping data back
+        my $pingdata;
+        if ( lc $serverengine eq "spigot" or lc $serverengine eq "fml" or lc $serverengine eq "forge" ) {
+            $pingdata = MCMonitorPerl::SocketConnection::mcping( $c, $server->get_column( 'ipaddress' ), $server->get_column( 'port' ) );
+        }
 
+        # parse data result from server or socket connection attempt
+        eval {
+            $pingdata = decode_json( $pingdata );
+        } or do {
+            $pingdata =~ s/IO::Socket::INET: connect: //;
+        };
+        $c->log->debug(Dumper($pingdata));
+        
         # detect a failed connection as best we can and process based on server up or down state
         # TODO: see if we can detect other web issues besides web service down and that affect all servers
         my $serverdata = undef;
-        if ( $jsondata =~ /Failed to connect/ or $jsondata =~ /Connection refused/ or
-             $jsondata =~ /Failed to read any data from socket/ or $jsondata eq '' ) {
+        if ( lc $pingdata =~ /failed to connect/ or lc $pingdata =~ /connection refused/ or $pingdata == 0 or
+             lc $pingdata =~ /failed to read any data from socket/ or lc $pingdata =~ /timeout/ or $pingdata eq '' ) {
              
+            
             if ( $server->get_column( 'state' ) eq "Starting" ) {
                 # play the server starting animation for however many monitoring cycles
                 $c->log->debug("Server $servername is starting state, but still cannot connect");
@@ -164,18 +183,21 @@ sub index :Path :Args(0) {
                 $globalstate{ 'jointrackerdirection' }->{ $servername } = "NoChange";
             }
             
-            $c->log->debug("State for $servername is " . $server->get_column( 'state' ));            
+            $globalstate{ 'lasterror' }->{ $servername } = $pingdata;
+            $c->log->debug("State for $servername is " . $server->get_column( 'state' ) . ", reason: $pingdata");            
             $c->log->debug("statetracker for $servername is " . $globalstate{ 'statetracker' }->{ $servername } );
 
         } else {
 
-            # convert the web query to something we can process in perl
-#            $c->log->debug("debug - jsondata: " . $jsondata);
-            $serverdata = from_json( $jsondata );
-
             # reset some server and global states, just in case something was down and is now up
             $isup = 1;
             $globalstate{ 'eventtracker' }->{ $servername } = 0;
+            $server->update(
+                {
+                    state => "Running"
+                }
+            );
+            $globalstate{ 'lasterror' }->{ $servername } = "";
 
             # process the data we have back from the server based on engine
             if ( $serverengine eq "Source" && $serverdata ne "" ) {
@@ -193,16 +215,16 @@ sub index :Path :Args(0) {
                 #  "ExtraDataFlags":177,"GamePort":27016,"SteamID":90132776141476868,"GameTags":" gm:sandbox","GameID":4000}
 
                 # retrieve current number of connections from server                
-                if ( defined ( $serverdata->{ 'Players' } ) ) {
-                    $numconnections = $serverdata->{'Players'};
+                if ( defined ( $pingdata->{ 'Players' } ) ) {
+                    $numconnections = $pingdata->{'Players'};
                 }
 
                 # detect some less common changes and update db if changed
-                if ( defined( $serverdata->{ 'Version'} ) ) {
-                    if ( $server->get_column( 'engineversion' ) != $serverdata->{ 'Version' } ) {
+                if ( defined( $pingdata->{ 'Version'} ) ) {
+                    if ( $server->get_column( 'engineversion' ) != $pingdata->{ 'Version' } ) {
                         $server->update(
                             {
-                                engineversion => $serverdata->{ 'Version' }
+                                engineversion => $pingdata->{ 'Version' }
                             }
                         );
                     }
@@ -232,9 +254,9 @@ sub index :Path :Args(0) {
                 #  }
 
                 # retrieve current number of connections from server
-                if ( defined( $serverdata->{ 'players' } ) ) {
-                    if ( defined( $serverdata->{ 'players' }{ 'online' } ) ) {
-                        $numconnections = $serverdata->{ 'players' }{ 'online' };
+                if ( defined( $pingdata->{ 'players' } ) ) {
+                    if ( defined( $pingdata->{ 'players' }{ 'online' } ) ) {
+                        $numconnections = $pingdata->{ 'players' }{ 'online' };
                     }
                 }
 
@@ -255,7 +277,7 @@ sub index :Path :Args(0) {
                 # sync our player tracker - needed at startup of monitoring, or when thing's just go awry
                 # note: we can't add them in the order they joined
                 if ( $numconnections > 0 && scalar( $globalstate{ 'playertracker' }{ $servername }->keys ) == 0 && $servername ne "BungeeCord" ) {
-                    my $onlineplayers = $serverdata->{ 'players' }{ 'sample' };
+                    my $onlineplayers = $pingdata->{ 'players' }{ 'sample' };
                     if ( scalar( @$onlineplayers ) > 0 ) {
 
                         # look through tracker and add any missing players
@@ -281,8 +303,8 @@ sub index :Path :Args(0) {
 
 
                 # detect some less common changes and update db if changed
-                if ( defined( $serverdata->{ 'version'}{ 'name' } ) ) {
-                    my $versionstring = $serverdata->{ 'version'}{ 'name' };
+                if ( defined( $pingdata->{ 'version'}{ 'name' } ) ) {
+                    my $versionstring = $pingdata->{ 'version'}{ 'name' };
                     my %replacements = ( "thermos" => "", "cauldron" => "", "craftbukkit" => "", "mcpc" => "", "kcauldron" => "",
                                          "forge " => "", "Forge " => "", "Spigot " => "", "BungeeCord " => "", "spigot " => "" );
                     $versionstring =~ s/(@{[join "|", keys %replacements]})/$replacements{$1}/g;
@@ -496,7 +518,7 @@ sub getserverstatus :Private {
     my( $self, $c, $ua, $ip, $port, $engine ) = @_;
 
     if ( $engine eq "Spigot" || $engine eq "Paper" || $engine eq "FML" ) {
-	$engine = "Minecraft";
+	    $engine = "Minecraft";
     }
 
     my $url = 'https://ob-mc.net/serverquery/query.php';

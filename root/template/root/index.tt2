@@ -87,13 +87,13 @@
             [% END %]
 
             <tr>
-              <td>
+              <td style="vertical-align: middle;">
                 [% server.servername %]
                 [% IF server.maintenancemode == 1 %]
                   <text>(m)</text>
                 [% END %]
               </td>
-              <td>
+              <td style="vertical-align: middle;">
                 [% IF server.state == "Starting" %]
                   <img src="static/images/starting.png" style="width:40px;height:40px" />
                 [% ELSIF server.state == "Stopping" %]
@@ -108,7 +108,7 @@
                     <img src="static/images/red_batsu_mark_circle.png" style="width:40px;height:40px" />
                 [% END %]
               </td>
-              <td>
+              <td style="vertical-align: middle;">
                 [% IF globalstate.jointrackerdirection.${servername} == "Up" %]
                   <p>
                     <span style="color:green; font:bold"><blink>
@@ -116,19 +116,33 @@
                     </blink></span>
                   </p>
                 [% ELSIF globalstate.jointrackerdirection.${servername} == "Down" %]
+                  [% IF globalstate.lasterror.${servername} != '' %]
+                    <p>
+                      <span style="color:red; font:bold">
+                        [% globalstate.reason.${servername} %]
+                      </span>
+                    </p>
+                  [% ELSE %]
                     <p>
                       <span style="color:red; font:bold"><blink>
                         [% server.numconnections %]
                       </blink></span>
                     </p>
+                  [% END %]
+                [% ELSIF globalstate.jointrackerdirection.${servername} == "NoChange" AND globalstate.lasterror.${servername} != '' %]
+                  <p>
+                    <span style="color:red; font:bold; font-size:10px;">
+                      [% globalstate.lasterror.${servername} %]
+                    </span>
+                  </p>
                 [% ELSE %]
                     [% server.numconnections %]
                 [% END %]
               </td>
-              <td>
+              <td style="vertical-align: middle;">
                 [% server.lastchecked %]
               </td>
-              <td>
+              <td style="vertical-align: top;">
                 <font style="font-size:10px">
                   [% count = 1 %]
                   [% FOREACH entry IN globalstate.playertracker.${servername}.as_list %]
