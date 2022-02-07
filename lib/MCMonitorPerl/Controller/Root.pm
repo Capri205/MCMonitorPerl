@@ -160,10 +160,13 @@ sub index :Path :Args(0) {
                     $c->log->debug("statetracker for $servername is " . $globalstate{ 'statetracker' }->{ $servername } );
                 }
             } else {
-             
+
+                my $lastchecked = substr( gettimestamp(), 1, length( gettimestamp() ) - 7 );
+
                 # no response from server so update database accordingly
                 $server->update(
                     {
+                        lastchecked => $lastchecked,
                         numconnections => $numconnections,
                         isup => $isup,
                         state => "Down"
