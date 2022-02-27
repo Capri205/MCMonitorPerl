@@ -95,17 +95,17 @@
               </td>
               <td style="vertical-align: middle;">
                 [% IF server.state == "Starting" %]
-                  <img src="static/images/starting.png" style="width:40px;height:40px" />
+                  <img src="static/images/starting.gif" style="width:40px;height:40px" />
                 [% ELSIF server.state == "Stopping" %]
-                  <img src="static/images/stopping.png" style="width:40px;height:40px" />
+                  <img src="static/images/stopping.gif" style="width:40px;height:40px" />
                 [% ELSIF server.isup == 1 OR server.state == "Running" %]
-                  <img src="static/images/green_check_mark_circle.png" style="width:40px;height:40px" />
+                  <img src="static/images/green_check_mark_circle.gif" style="width:40px;height:40px" />
                 [% ELSIF server.maintenancemode == 0 %]
                     <div><blink>
-                      <img src="static/images/red_batsu_mark_circle.png" style="width:40px;height:40px" />
+                      <img src="static/images/red_batsu_mark_circle.gif" style="width:40px;height:40px" />
                     </blink></div>
                 [% ELSE %]
-                    <img src="static/images/red_batsu_mark_circle.png" style="width:40px;height:40px" />
+                    <img src="static/images/red_batsu_mark_circle.gif" style="width:40px;height:40px" />
                 [% END %]
               </td>
               <td style="vertical-align: middle;">
