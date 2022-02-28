@@ -1,4 +1,12 @@
-﻿/* blinkity blink blink */
+﻿:root {
+  --bg: #FFFFFF;
+  --text-color: #555;
+  --link-color: #639A67;
+  --link-hover: #205D67;
+  --server-divider: lightgray;
+}
+
+/* blinkity blink blink */
 blink, .blink {
     -webkit-animation: blink 1s step-end infinite;
     -moz-animation: blink 1s step-end infinite;
@@ -25,6 +33,8 @@ blink, .blink {
 body {
     padding-top: 50px;
     padding-bottom: 20px;
+    background: var(--bg);
+    color: var(--text-color);
 }
 
 /* Set padding to keep content from hitting the edges */
@@ -82,4 +92,91 @@ textarea {
 }
 .error {
     color: #f00;
+}
+
+.darktheme {
+  --bg: #444444;
+  --text-color: #FFFFFF;
+  --link-color: #B793E6;
+  --link-hover: #3532A7;
+  --server-divider: #44474b;
+}
+
+background: linear-gradient(to right, #FFFB85, #5A3662); /* our fallback */
+background: linear-gradient(to right, var(--top-grad1), var(--top-grad2));
+
+a, a:link {
+  color: var(--link-color);
+}
+a:hover {
+  color: var(--link-hover);
+}
+
+/* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 30px;
+  height: 17px;
+  top: 2px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 13px;
+  width: 13px;
+  left: 4px;
+  bottom: 2px;
+  top: 2px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(13px);
+  -ms-transform: translateX(13px);
+  transform: translateX(13px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 17px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+.server-divider {
+  background-color: var(--server-divider);
 }

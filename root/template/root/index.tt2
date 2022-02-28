@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
   <head>
     <meta charset = "utf8">
@@ -37,6 +38,7 @@
           <ul class="nav navbar-nav">
             <li><a href="manage">Manage</a></li>
             <li><a href="servers">Servers</a></li>
+            <li><a>Dark Theme: <label class="switch"><input class="toggle-darktheme" type="checkbox"><span class="slider round"></span></label></a></li>
           </ul>
         </div>
       </div>
@@ -76,11 +78,11 @@
             [% IF currEngine != server.enginetype %]
               [% IF currEngine != "NaN" %]
                 <tr>
-                  <td style="background-color:lightgray" height="10"></td>
-                  <td style="background-color:lightgray"></td>
-                  <td style="background-color:lightgray"></td>
-                  <td style="background-color:lightgray"></td>
-                  <td style="background-color:lightgray"></td>
+                  <td class="server-divider" height="10"></td>
+                  <td class="server-divider"></td>
+                  <td class="server-divider"></td>
+                  <td class="server-divider"></td>
+                  <td class="server-divider"></td>
                 </tr>
               [% END %]
               [% currEngine = server.enginetype %]
@@ -182,5 +184,6 @@
     </div>
     <script src="static/js/jquery-3.4.1.js"></script>
     <script src="static/js/bootstrap.js"></script>
+    <script src="static/js/darktheme.js"></script>
   </body>
 </html>
