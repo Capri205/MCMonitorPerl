@@ -133,8 +133,15 @@ sub index :Path :Args(0) {
         # detect a failed connection as best we can and process based on server up or down state
         # TODO: see if we can detect other web issues besides web service down and that affect all servers
         my $serverdata = undef;
-        if ( lc $pingdata =~ /failed to connect/ or lc $pingdata =~ /connection refused/ or $pingdata eq "0" or
-             lc $pingdata =~ /failed to read any data from socket/ or lc $pingdata =~ /timeout/ or $pingdata eq '' ) {
+        $c->log->debug("pingdata: " . $pingdata);
+        $c->log->debug("pingdata ref: " . ref($pingdata));
+        if ( ref( $pingdata ) ne 'HASH' or
+             lc $pingdata =~ /failed to connect/ or
+             lc $pingdata =~ /connection refused/ or
+             lc $pingdata =~ /failed to read any data from socket/ or
+             lc $pingdata =~ /timeout/ or
+             $pingdata eq '' or
+             $pingdata eq '0' ) {
              
             
             if ( $server->get_column( 'state' ) eq "Starting" ) {

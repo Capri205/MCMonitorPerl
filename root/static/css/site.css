@@ -4,6 +4,7 @@
   --link-color: #639A67;
   --link-hover: #205D67;
   --server-divider: lightgray;
+  --table-bb-color: #ddd;
 }
 
 /* blinkity blink blink */
@@ -100,8 +101,15 @@ textarea {
   --link-color: #B793E6;
   --link-hover: #3532A7;
   --server-divider: #44474b;
+  --table-bb-color: #5c5c5c;
 }
 
+.table > thead > tr > th {
+  border-bottom: 2px solid var(--table-bb-color);
+}
+.table > tbody > tr > td {
+  border-bottom: 1px solid var(--table-bb-color);
+}
 background: linear-gradient(to right, #FFFB85, #5A3662); /* our fallback */
 background: linear-gradient(to right, var(--top-grad1), var(--top-grad2));
 

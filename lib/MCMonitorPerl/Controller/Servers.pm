@@ -45,22 +45,19 @@ sub create :Path('create') Args(0) {
     $c->log->debug("------------------");
 
     if ( defined( $p{servername} ) ) {
-        if ( $self->validateEntry( $c, \%p ) ) {
-            my $server = $c->model( 'DB::Servers' )->create(
-                {
-                    servername => $p{servername},
-                    description => $p{description},
-                    enginetype => $p{enginetype},
-                    engineversion => $p{engineversion},
-                    serverversion => $p{serverversion},
-                    hostname => $p{hostname},
-                    ipaddress => $p{ipaddress},
-                    port => $p{port},
-                    maintenancemode => $p{maintenancemode}
-                }
-            );
-
-        }
+        my $server = $c->model( 'DB::Servers' )->create(
+            {
+                servername => $p{servername},
+                description => $p{description},
+                enginetype => $p{enginetype},
+                engineversion => $p{engineversion},
+                serverversion => $p{serverversion},
+                hostname => $p{hostname},
+                ipaddress => $p{ipaddress},
+                port => $p{port},
+                maintenancemode => $p{maintenancemode}
+            }
+        );
         $c->response->redirect( $c->uri_for( $self->action_for( 'servers' ) ) );
     }
 

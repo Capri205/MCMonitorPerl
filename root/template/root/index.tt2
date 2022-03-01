@@ -92,7 +92,7 @@
               <td style="vertical-align: middle;">
                 [% server.servername %]
                 [% IF server.maintenancemode == 1 %]
-                  <text>(m)</text>
+                  <span>(m)</span>
                 [% END %]
               </td>
               <td style="vertical-align: middle;">
@@ -113,27 +113,27 @@
               <td style="vertical-align: middle;">
                 [% IF globalstate.jointrackerdirection.${servername} == "Up" %]
                   <p>
-                    <span style="color:green; font:bold"><blink>
+                    <span style="color:green; font-weight:bold"><blink>
                       [% server.numconnections %]
                     </blink></span>
                   </p>
                 [% ELSIF globalstate.jointrackerdirection.${servername} == "Down" %]
                   [% IF globalstate.lasterror.${servername} != '' %]
                     <p>
-                      <span style="color:red; font:bold">
+                      <span style="color:red; font-weight:bold">
                         [% globalstate.reason.${servername} %]
                       </span>
                     </p>
                   [% ELSE %]
                     <p>
-                      <span style="color:red; font:bold"><blink>
+                      <span style="color:red; font-weight:bold"><blink>
                         [% server.numconnections %]
                       </blink></span>
                     </p>
                   [% END %]
                 [% ELSIF globalstate.jointrackerdirection.${servername} == "NoChange" AND globalstate.lasterror.${servername} != '' %]
                   <p>
-                    <span style="color:red; font:bold; font-size:10px;">
+                    <span style="color:red; font-weight:bold; font-size:10px;">
                       [% globalstate.lasterror.${servername} %]
                     </span>
                   </p>
@@ -172,11 +172,12 @@
         </tbody>
       </table>
 
-      <hr />
-      <span class="message">[% status_msg %]</span>
-      <span class="error">[% error_msg %]</span>
-      <hr />
-
+      [% IF status_msg != "" or error_msg != "" %]
+        <hr />
+        <span class="message">[% status_msg %]</span>
+        <span class="error">[% error_msg %]</span>
+        <hr />
+      [% END %]
       <footer>
         <p>&copy; 2021 - MCMonitor</p>
       </footer>
