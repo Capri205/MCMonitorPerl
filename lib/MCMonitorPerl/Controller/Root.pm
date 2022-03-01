@@ -133,7 +133,7 @@ sub index :Path :Args(0) {
         # detect a failed connection as best we can and process based on server up or down state
         # TODO: see if we can detect other web issues besides web service down and that affect all servers
         my $serverdata = undef;
-        if ( lc $pingdata =~ /failed to connect/ or lc $pingdata =~ /connection refused/ or $pingdata == 0 or
+        if ( lc $pingdata =~ /failed to connect/ or lc $pingdata =~ /connection refused/ or $pingdata eq "0" or
              lc $pingdata =~ /failed to read any data from socket/ or lc $pingdata =~ /timeout/ or $pingdata eq '' ) {
              
             
@@ -367,11 +367,7 @@ sub index :Path :Args(0) {
                 } else {
                     $globalstate{ 'statetracker' }->{ $servername } += 1;
                 }
-                
             }
-            $c->log->debug("State for $servername is " . $server->get_column( 'state' ));
-            $c->log->debug("statetracker for $servername is " . $globalstate{ 'statetracker' }->{ $servername } );
-
         }
     }
 
