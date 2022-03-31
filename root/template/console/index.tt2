@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset = "utf8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+    <link href="/static/css/site.css" rel="stylesheet">
+
+    <script src="/static/js/modernizr-2.8.3.js"></script>
+
+    [% title = "Server Console" %]
+
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">MCMonitor</a>
+        </div>
+        <div class="navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="/manage">Manage</a></li>
+            <li><a href="/servers">Servers</a></li>
+            <li><a>Dark Theme: <label class="switch"><input class="toggle-darktheme" type="checkbox"><span class="slider round"></span></label></a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container body-content">
+
+      <h2>[% title %]</h2>
+
+      <section>
+        <article>
+            <h2>[% server.servername %]</h2>
+            <!-- server log -->
+            <div>
+              <table>
+                <tbody>
+                  <tr>
+                    <td>
+                    <form>
+                      <label for="command">Command: </label>&nbsp;&nbsp;
+                      <input name="command" type="text" class="consolecmd" placeholder="Enter command...">
+                    </form>
+                    </td>
+                      <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                      <td><label for="response">Response: </label>&nbsp;&nbsp;</td>
+                    <td><span>[% response %]</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+        </article>
+      </section>
+      
+      <hr />
+      <span class="message">[% status_msg %]</span>
+      <span class="error">[% error_msg %]</span>
+      <hr />
+
+      <footer>
+        <p>&copy; 2021 - MCMonitor</p>
+      </footer>
+
+    </div>
+
+    <script>
+      document.querySelector( 'input' ).addEventListener( 'keypress', function(event) {
+        if ( event.keyCode == 13 ) {
+            event.preventDefault();
+        }
+      } );
+    </script>
+
+    <script src="/static/js/jquery-3.4.1.js"></script>
+    <script src="/static/js/bootstrap.js"></script>
+    <script src="/static/js/darktheme.js"></script>
+
+  </body>
+</html>
