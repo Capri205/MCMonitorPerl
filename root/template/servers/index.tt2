@@ -68,6 +68,12 @@
             Port
           </th>
           <th>
+            RCON Port
+          </th>
+          <th>
+            RCON Password
+          </th>
+          <th>
             Maintenance Mode
           </th>
           <th>
@@ -96,6 +102,12 @@
             </td>
             <td>
               [% server.port %]
+            </td>
+            <td>
+              [% server.rconport %]
+            </td>
+            <td>
+              [% server.rconpassword %]
             </td>
             <td>
               [% IF server.maintenancemode == 1 %]

@@ -1,4 +1,5 @@
 package MCMonitorPerl::Controller::Root;
+
 use strict;
 use warnings;
 use Moose;

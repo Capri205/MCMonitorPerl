@@ -103,6 +103,16 @@ __PACKAGE__->table("servers");
   data_type: 'text'
   is_nullable: 1
 
+=head2 rconport
+
+  data_type: 'integer'
+  is_nullable: 1
+
+=head2 rconpassword
+
+  data_type: 'text'
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -131,6 +141,10 @@ __PACKAGE__->add_columns(
   "lastchecked",
   { data_type => "text", is_nullable => 1 },
   "state",
+  { data_type => "text", is_nullable => 1 },
+  "rconport",
+  { data_type => "integer", is_nullable => 1 },
+  "rconpassword",
   { data_type => "text", is_nullable => 1 }
 );
 

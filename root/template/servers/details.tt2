@@ -67,6 +67,12 @@
         <dt>Port</dt>
         <dd>[% server.port %]</dd>
 
+        <dt>RCON Port</dt>
+        <dd>[% server.rconport %]</dd>
+
+        <dt>RCON Password</dt>
+        <dd>[% server.rconpassword %]</dd>
+
         <dt>Maintenance Mode</dt>
         [% IF server.maintenancemode == 1 %]
           <dd>Yes</dd>

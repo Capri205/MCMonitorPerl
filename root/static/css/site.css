@@ -5,6 +5,8 @@
   --link-hover: #205D67;
   --server-divider: lightgray;
   --table-bb-color: #ddd;
+  --textbox-background: #ffffff;
+  --textbox-color: #000000;
 }
 
 /* blinkity blink blink */
@@ -102,6 +104,8 @@ textarea {
   --link-hover: #3532A7;
   --server-divider: #44474b;
   --table-bb-color: #5c5c5c;
+  --textbox-background: #555555;
+  --textbox-color: #CCCCCC;
 }
 
 .table > thead > tr > th {
@@ -187,4 +191,9 @@ input:checked + .slider:before {
 
 .server-divider {
   background-color: var(--server-divider);
+}
+
+.consolecmd {
+  background-color: var(--textbox-background);
+  color: var(--textbox-color);
 }

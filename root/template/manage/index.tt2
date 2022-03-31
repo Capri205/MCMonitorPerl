@@ -4,12 +4,12 @@
     <meta charset = "utf8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link href="static/css/bootstrap.css" rel="stylesheet">
-    <link href="static/css/site.css" rel="stylesheet">
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+    <link href="/static/css/site.css" rel="stylesheet">
 
-    <script src="static/js/modernizr-2.8.3.js"></script>
+    <script src="/static/js/modernizr-2.8.3.js"></script>
 
-    [% title = "Servers" %]
+    [% title = "Manage Servers" %]
 
   </head>
 
@@ -54,7 +54,7 @@
             Port
           </th>
           <th>
-            Maintenance Mode
+            Console
           </th>
           <th>
             State
@@ -68,6 +68,9 @@
           <tr>
             <td>
               [% server.servername %]
+              [% IF server.maintenancemode ==1 %]
+                (m)
+              [% END %]
             </td>
             <td>
               [% server.hostname %]
@@ -79,11 +82,7 @@
               [% server.port %]
             </td>
             <td>
-              [% IF server.maintenancemode == 1 %]
-                Yes
-              [% ELSE %]
-                No
-              [% END %]
+              <a href="/console/[% server.servername %]">[% server.servername %]</a>
             </td>
             <td>
               [% server.state %]
@@ -110,9 +109,9 @@
 
     </div>
 
-    <script src="static/js/jquery-3.4.1.js"></script>
-    <script src="static/js/bootstrap.js"></script>
-    <script src="static/js/darktheme.js"></script>
+    <script src="/static/js/jquery-3.4.1.js"></script>
+    <script src="/static/js/bootstrap.js"></script>
+    <script src="/static/js/darktheme.js"></script>
 
   </body>
 </html>

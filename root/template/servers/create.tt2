@@ -108,6 +108,22 @@
         </div>
 
         <div class="form-group">
+          <label class="control-label col-md-2" for="rconport">RCON Port</label>
+          <div class="col-md-10">
+            <input class="form-control text-box single-line" data-val-number="The field RCON Port must be a number" id="rconport" name="rconport" type="number" value="[% server.rconport %]" placeholder="Enter port number" />
+            <span class="field-validation-valid text-danger" data-valmsg-for="rconport" data-valmsg-replace="true"></span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="control-label col-md-2" for="reconpassword">RCON Password</label>
+          <div class="col-md-10">
+            <input class="form-control text-box single-line" id="rconpassword" name="rconpassword" type="text" value="[% server.rconpassword %]" placeholder="Enter Password" />
+            <span class="field-validation-valid text-danger" data-valmsg-for="rconpassword" data-valmsg-replace="true"></span>
+          </div>
+        </div>
+
+        <div class="form-group">
           <label class="control-label col-md-2" for="maintenancemode">MaintenanceMode</label>
           <div class="col-md-10">
             <select class="form-control list-box tri-state" id="maintenancemode" name="maintenancemode"><option selected="selected" value="1">Yes</option>

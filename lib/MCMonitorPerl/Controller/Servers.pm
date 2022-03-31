@@ -55,6 +55,8 @@ sub create :Path('create') Args(0) {
                 hostname => $p{hostname},
                 ipaddress => $p{ipaddress},
                 port => $p{port},
+                rconport => $p{rconport},
+                rconpassword => $p{rconpassword},
                 maintenancemode => $p{maintenancemode}
             }
         );
@@ -94,6 +96,8 @@ sub edit :Path('edit') Args(1) {
              $server->get_column('hostname') ne $p{hostname} ||
              $server->get_column('ipaddress') ne $p{ipaddress} ||
              $server->get_column('port') ne $p{port} ||
+             $server->get_column('rconport') ne $p{rconport} ||
+             $server->get_column('rconpassword') ne $p{rconpassword} ||
              $server->get_column('maintenancemode') ne $p{maintenancemode} ) {
 
             $server->update(
@@ -106,6 +110,8 @@ sub edit :Path('edit') Args(1) {
                     hostname => $p{hostname},
                     ipaddress => $p{ipaddress},
                     port => $p{port},
+                    rconport => $p{rconport},
+                    rconpassword => $p{rconpassword},
                     maintenancemode => $p{maintenancemode},
                 }
             );
