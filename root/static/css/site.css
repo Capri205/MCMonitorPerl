@@ -7,6 +7,8 @@
   --table-bb-color: #ddd;
   --textbox-background: #ffffff;
   --textbox-color: #000000;
+  --button-background: #dddddd;
+  --button-color: #000000;
 }
 
 /* blinkity blink blink */
@@ -106,6 +108,8 @@ textarea {
   --table-bb-color: #5c5c5c;
   --textbox-background: #555555;
   --textbox-color: #CCCCCC;
+  --button-background: #777777;
+  --button-color: #CCCCCC;
 }
 
 .table > thead > tr > th {
@@ -196,4 +200,8 @@ input:checked + .slider:before {
 .consolecmd {
   background-color: var(--textbox-background);
   color: var(--textbox-color);
+}
+.consolebtn {
+  background-color: var(--button-background);
+  color: var(--button-color); 
 }

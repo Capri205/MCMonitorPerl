@@ -27,8 +27,9 @@
         </div>
         <div class="navbar-collapse">
           <ul class="nav navbar-nav">
-            <li><a href="/monitor">Monitor</a></li>
+            <li><a href="/manage">Manage</a></li>
             <li><a href="/servers">Servers</a></li>
+            <li><a>Dark Theme: <label class="switch"><input class="toggle-darktheme" type="checkbox"><span class="slider round"></span></label></a></li>
           </ul>
         </div>
       </div>
@@ -46,7 +47,7 @@
         <div class="form-group">
           <label class="control-label col-md-2" for="servername">Servername</label>
           <div class="col-md-10">
-            <input class="form-control text-box single-line" data-val="true" data-val-required="The servername is required" id="Servername" name="servername" type="text" value="[% server.servername %]" placeholder="Enter the name of this server" required />
+            <input class="form-control text-box single-line consolecmd" data-val="true" data-val-required="The servername is required" id="Servername" name="servername" type="text" value="[% server.servername %]" placeholder="Enter the name of this server" required />
             <span class="field-validation-valid text-danger" data-valmsg-for="servername" data-valmsg-replace="true"></span>
           </div>
         </div>
@@ -54,7 +55,7 @@
         <div class="form-group">
           <label class="control-label col-md-2" for="description">Description</label>
           <div class="col-md-10">
-            <input class="form-control text-box single-line" id="description" name="description" type="text" value="[% server.description %]" placeholder="Enter server description" />
+            <input class="form-control text-box single-line consolecmd" id="description" name="description" type="text" value="[% server.description %]" placeholder="Enter server description" />
             <span class="field-validation-valid text-danger" data-valmsg-for="description" data-valmsg-replace="true"></span>
           </div>
         </div>
@@ -62,7 +63,7 @@
         <div class="form-group">
           <label class="control-label col-md-2" for="enginetype">Engine Type</label>
           <div class="col-md-10">
-            <input class="form-control text-box single-line" id="enginetype" name="enginetype" type="text" value="[% server.enginetype %]" placeholder="Enter core engine type" data-val="true" data-val-required="The server engine type is required" required />
+            <input class="form-control text-box single-line consolecmd" id="enginetype" name="enginetype" type="text" value="[% server.enginetype %]" placeholder="Enter core engine type" data-val="true" data-val-required="The server engine type is required" required />
             <span class="field-validation-valid text-danger" data-valmsg-for="enginetype" data-valmsg-replace="true"></span>
           </div>
         </div>
@@ -70,7 +71,7 @@
         <div class="form-group">
           <label class="control-label col-md-2" for="engineversion">Engine Version</label>
           <div class="col-md-10">
-            <input class="form-control text-box single-line" id="engineversion" name="engineversion" type="text" value="[% server.engineversion %]" placeholder="Enter core engine version" />
+            <input class="form-control text-box single-line consolecmd" id="engineversion" name="engineversion" type="text" value="[% server.engineversion %]" placeholder="Enter core engine version" />
             <span class="field-validation-valid text-danger" data-valmsg-for="engineversion" data-valmsg-replace="true"></span>
           </div>
         </div>
@@ -78,7 +79,7 @@
         <div class="form-group">
           <label class="control-label col-md-2" for="serverversion">Server Version</label>
           <div class="col-md-10">
-            <input class="form-control text-box single-line" id="serverversion" name="serverversion" type="text" value="[% server.serverversion %]" placeholder="Enter server version" />
+            <input class="form-control text-box single-line consolecmd" id="serverversion" name="serverversion" type="text" value="[% server.serverversion %]" placeholder="Enter server version" />
             <span class="field-validation-valid text-danger" data-valmsg-for="serverversion" data-valmsg-replace="true"></span>
           </div>
         </div>
@@ -86,7 +87,7 @@
         <div class="form-group">
           <label class="control-label col-md-2" for="hostname">Hostname</label>
           <div class="col-md-10">
-            <input class="form-control text-box single-line" id="hostname" name="hostname" type="text" value="[% server.hostname %]" placeholder="Enter server hostname" data-val="true" data-val-required="The host the server resides on is required" required />
+            <input class="form-control text-box single-line consolecmd" id="hostname" name="hostname" type="text" value="[% server.hostname %]" placeholder="Enter server hostname" data-val="true" data-val-required="The host the server resides on is required" required />
             <span class="field-validation-valid text-danger" data-valmsg-for="hostname" data-valmsg-replace="true"></span>
           </div>
         </div>
@@ -94,7 +95,7 @@
         <div class="form-group">
           <label class="control-label col-md-2" for="ipaddress">IP Address</label>
           <div class="col-md-10">
-            <input class="form-control text-box single-line" id="ipaddress" name="ipaddress" type="text" value="[% server.ipaddress %]" placeholder="Enter IP Address" data-val="true" data-val-required="A valid V4 IP address is required" required />
+            <input class="form-control text-box single-line consolecmd" id="ipaddress" name="ipaddress" type="text" value="[% server.ipaddress %]" placeholder="Enter IP Address" data-val="true" data-val-required="A valid V4 IP address is required" required />
             <span class="field-validation-valid text-danger" data-valmsg-for="ipaddress" data-valmsg-replace="true"></span>
           </div>
         </div>
@@ -102,7 +103,7 @@
         <div class="form-group">
           <label class="control-label col-md-2" for="port">Port</label>
           <div class="col-md-10">
-            <input class="form-control text-box single-line" data-val="true" data-val-number="The field Port must be a number" data-val-required="The Port field is required" id="port" name="port" type="number" value="[% server.port %]" placeholder="Enter port number" required />
+            <input class="form-control text-box single-line consolecmd" data-val="true" data-val-number="The field Port must be a number" data-val-required="The Port field is required" id="port" name="port" type="number" value="[% server.port %]" placeholder="Enter port number" required />
             <span class="field-validation-valid text-danger" data-valmsg-for="port" data-valmsg-replace="true"></span>
           </div>
         </div>
@@ -110,7 +111,7 @@
         <div class="form-group">
           <label class="control-label col-md-2" for="rconport">RCON Port</label>
           <div class="col-md-10">
-            <input class="form-control text-box single-line" data-val-number="The field RCON Port must be a number" id="rconport" name="rconport" type="number" value="[% server.rconport %]" placeholder="Enter port number" />
+            <input class="form-control text-box single-line consolecmd" data-val-number="The field RCON Port must be a number" id="rconport" name="rconport" type="number" value="[% server.rconport %]" placeholder="Enter port number" />
             <span class="field-validation-valid text-danger" data-valmsg-for="rconport" data-valmsg-replace="true"></span>
           </div>
         </div>
@@ -118,7 +119,7 @@
         <div class="form-group">
           <label class="control-label col-md-2" for="reconpassword">RCON Password</label>
           <div class="col-md-10">
-            <input class="form-control text-box single-line" id="rconpassword" name="rconpassword" type="text" value="[% server.rconpassword %]" placeholder="Enter Password" />
+            <input class="form-control text-box single-line consolecmd" id="rconpassword" name="rconpassword" type="text" value="[% server.rconpassword %]" placeholder="Enter Password" />
             <span class="field-validation-valid text-danger" data-valmsg-for="rconpassword" data-valmsg-replace="true"></span>
           </div>
         </div>
@@ -130,7 +131,7 @@
             [% IF server.maintenancemode == 1 %]
               [% currval = "Yes" %]
             [% END %]
-            <select class="form-control list-box tri-state" id="maintenancemode" name="maintenancemode"><option selected="selected" value="[% currval %]">[% currval %]</option>
+            <select class="form-control list-box tri-state consolecmd" id="maintenancemode" name="maintenancemode"><option selected="selected" value="[% currval %]">[% currval %]</option>
               [% IF currval == "Yes" %]
                 <option value="No">No</option>
               [% ELSE %]
@@ -143,7 +144,7 @@
 
         <div class="form-group">
           <div class="col-md-offset-2 col-md-10">
-          <input type="submit" value="Save" class="btn btn-default" />
+          <input type="submit" value="Save" class="btn btn-default consolebtn" />
         </div>
 
       </form>
@@ -164,6 +165,7 @@
     <script src="../../static/js/bootstrap.js"></script>
     <script src="../../static/js/jquery.validate.js"></script>
     <script src="../../static/js/jquery.validate.unobtrusive.js"></script>
+    <script src="../../static/js/darktheme.js"></script>
 
   </body>
 </html>

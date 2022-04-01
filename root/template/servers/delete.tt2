@@ -33,8 +33,9 @@
         </div>
         <div class="navbar-collapse">
           <ul class="nav navbar-nav">
-            <li><a href="/monitor">Monitor</a></li>
+            <li><a href="/manage">Manage</a></li>
             <li><a href="/servers">Servers</a></li>
+            <li><a>Dark Theme: <label class="switch"><input class="toggle-darktheme" type="checkbox"><span class="slider round"></span></label></a></li>
           </ul>
         </div>
       </div>
@@ -91,8 +92,8 @@
       <form action="/servers/delete/[% server.servername %]" method="post">
         <div class="form-group">
           <input type="hidden" name="submitType">
-          <input type="submit" value="Delete" class="btn btn-default" onclick="setType('Delete')" />
-          <a href="/servers" class="btn btn-default">Cancel</a>
+          <input type="submit" value="Delete" class="btn btn-default consolebtn" onclick="setType('Delete')" />
+          <a href="/servers" class="btn btn-default consolebtn">Cancel</a>
         </div>
       </form>
 
@@ -110,6 +111,7 @@
     <script src="../../static/js/bootstrap.js"></script>
     <script src="../../static/js/jquery.validate.js"></script>
     <script src="../../static/js/jquery.validate.unobtrusive.js"></script>
+    <script src="../../static/js/darktheme.js"></script>
 
   </body>
 </html>
