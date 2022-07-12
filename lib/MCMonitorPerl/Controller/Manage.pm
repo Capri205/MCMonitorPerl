@@ -1,7 +1,7 @@
 package MCMonitorPerl::Controller::Manage;
 use Moose;
 use namespace::autoclean;
-use Net::SSH::Perl;
+use Net::OpenSSH;
 use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -12,12 +12,9 @@ BEGIN { extends 'Catalyst::Controller'; }
 
 my @identityfiles = ( $ENV{HOME} . "/.ssh/id_rsa" );
 my %sshparams = (
-    protocol => '2,1',
     port => 8105,
     user => 'mcadmin',
-    identity_files => \@identityfiles,
-    use_pty => 1,
-    debug => 1
+    key_path => \@identityfiles
 );
 
 =head1 NAME
@@ -69,7 +66,7 @@ sub start :Path('start') Args(1) {
 
     # execute command
     my $cmd = $self->buildcmd( $c, $server, "start" );
-    my ( $stdout, $stderr, $rtncode ) = $sshcon->cmd( $cmd );
+    my ( $stdout, $stderr, $rtncode ) = $sshcon->system( $cmd );
     if ( $rtncode != 0 ) {
         $c->response->body( "Something went terribly wrong.<br>Error executing command: $cmd");
         return;
@@ -110,7 +107,7 @@ sub stop :Path('stop') Args(1) {
 
     # execute command
     my $cmd = $self->buildcmd( $c, $server, "stop" );
-    my ( $stdout, $stderr, $rtncode ) = $sshcon->cmd( $cmd );
+    my ( $stdout, $stderr, $rtncode ) = $sshcon->system( $cmd );
     if ( $rtncode != 0 ) {
         $c->response->body( "Something went terribly wrong<br>Error executing command: $cmd");
         return;
@@ -136,14 +133,12 @@ sub getsshconnection {
 
     # setup ssh object
     $c->log->debug("Identify file: " . $identityfiles[0]);
-    my $sshcon = Net::SSH::Perl->new( $host, %sshparams );
+    my $sshcon = Net::OpenSSH->new( $host, %sshparams );
     if ( !defined( $sshcon ) or $sshcon eq '' ) {
         $c->response->body( "Unable to establish SSH connection to $host" );
         return;
     }
     $c->log->debug("SSH connection established to $host");
-    # attempt login
-    $sshcon->login('mcadmin');
 
     return $sshcon;
 }
