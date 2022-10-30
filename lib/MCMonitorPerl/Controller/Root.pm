@@ -107,14 +107,6 @@ sub index :Path :Args(0) {
         # set up a server entry in our state tracker if not there
         $self->setupstateentry( $c, $servername );
 
-#        my $jsondata = $self->getserverstatus(
-#            $c, $ua,
-#            $server->get_column( 'ipaddress' ),
-#            $server->get_column( 'port' ),
-#            $serverengine
-#        );
-#        $c->log->debug(Dumper($jsondata));
-
         my $serverengine = $server->get_column('enginetype');
 
         # ping the server to see if it's alive and get some basic ping data back
@@ -129,7 +121,6 @@ sub index :Path :Args(0) {
         } or do {
             $pingdata =~ s/IO::Socket::INET: connect: //;
         };
-        $c->log->debug(Dumper($pingdata));
         
         # detect a failed connection as best we can and process based on server up or down state
         # TODO: see if we can detect other web issues besides web service down and that affect all servers
@@ -272,14 +263,22 @@ sub index :Path :Args(0) {
                 }
 
                 # process player updates for server
+                # update looks like this: ServerSwitchEvent#sean_ob#ob-lobby#10/29 18:10:26.1026
                 for my $update ( @playerupdates ) {
                     my @fields = split( '#', $update );
-                    if ( $fields[2] eq $servername ) {
+                    if ( defined( $fields[2] ) and $fields[2] eq $servername ) {
                         if ( $fields[0] eq "ServerSwitchEvent" && $servername ne "BungeeCord" ) {
                             if ( scalar( $globalstate{ 'playertracker' }{ $servername }->keys ) == $MAXPLAYERSTORE ) {
                                 $globalstate{ 'playertracker' }{ $servername }->pop;
                             }
+                            # get timestamp of event or use current if not there
                             my $timestamp = gettimestamp();
+                            if ( defined( $fields[3] ) and $fields[3] ne '' ) {
+                                # clean up the timestamp we got from the web call
+                                $fields[3] =~ s/\\n//;
+                                $fields[3] =~ s/\\//;
+                                $timestamp = substr( $fields[3], 0, length( $fields[3] ) - 5 );
+                            }
                             $globalstate{ 'playertracker' }{ $servername }->unshift( $timestamp => $fields[1] );
                         }
                     }
