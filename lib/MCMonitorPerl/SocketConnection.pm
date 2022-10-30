@@ -43,7 +43,6 @@ sub mcping {
             $socket->recv( $datablock, $remainder, $ptype );
             $retdata .= $datablock;
         }
-        $c->log->debug(Dumper($retdata));
         
     } else {
         $c->log->debug("Failed to make socket connection to $ip : $port");
