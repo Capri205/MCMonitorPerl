@@ -145,6 +145,10 @@ __PACKAGE__->add_columns(
   "rconport",
   { data_type => "integer", is_nullable => 1 },
   "rconpassword",
+  { data_type => "text", is_nullable => 1 },
+  "lasterror",
+  { data_type => "text", is_nullable => 1 },
+  "pingdata",
   { data_type => "text", is_nullable => 1 }
 );
 

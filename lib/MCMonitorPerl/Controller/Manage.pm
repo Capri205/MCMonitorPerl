@@ -51,6 +51,9 @@ sub start :Path('start') Args(1) {
 
     my %p = %{$c->request->params};
 
+$c->log->debug("HOME: " . $ENV{HOME} );
+$c->log->debug(@identityfiles);
+
     # get server data from database
     my $serverdata = $c->model( 'DB::Servers' )->find(
         { servername => $server },

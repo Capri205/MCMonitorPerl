@@ -12,7 +12,7 @@ use Hash::Ordered;
 use Time::HiRes qw( usleep gettimeofday );
 use POSIX qw( strftime );
 use MCMonitorPerl::SocketConnection;
-
+use Proc::ProcessTable;
 
 
 # setup a global state tracker and some global limits
@@ -71,10 +71,17 @@ sub index :Path :Args(0) {
     );
 
     # check our web server is up and redirect to an error page if not
-    if (! $self->checkwebserverstatus( $c, $ua ) ) {
+    if ( !$self->checkwebserverstatus( $c, $ua ) ) {
         $c->log->error("Error: Web service not available.");
         $c->detach( 'webdown' );
     }
+
+    # check the monitoring agent is running
+    if ( !$self->checkagentstatus( $c ) ) {
+        $c->log->error("Error: Monitoring Agent isn't running.");
+        $c->detach( 'agentdown' );
+    }
+    $c->log->info("Monitoring Agent appears to be running.");
 
     # reset our sound prompts each check
     $globalstate{ 'sounds' }->{ 'playjoinsound' } = "false";
@@ -92,50 +99,21 @@ sub index :Path :Args(0) {
     $playerupdates =~ s/^\[\"//; $playerupdates =~ s/\"\]$//;
     chomp( $playerupdates );
     my @playerupdates = split( ',', $playerupdates );
+    $c->log->debug("debug - playerupdates: $playerupdates");
 
     # loop through our servers setting up state for our view call
-    my $numconnections;
-    my $isup;
     for my $server ( @$serverlist ) {
 
-        $isup = 0;
-        $numconnections = 0;
-
         my $servername = $server->get_column( 'servername' );
-        $c->log->debug("in main with $servername, current state: " . $server->get_column( 'state' ) . ", isup: " . $server->get_column( 'isup' ));
 
         # set up a server entry in our state tracker if not there
         $self->setupstateentry( $c, $servername );
 
-        my $serverengine = $server->get_column('enginetype');
+        # process server state based on whether the agent found the server up or down
+        my $lasterror = $server->get_column( 'lasterror' );
+        if ( defined( $lasterror ) and $lasterror ne '' ) {
 
-        # ping the server to see if it's alive and get some basic ping data back
-        my $pingdata;
-        if ( lc $serverengine eq "spigot" or lc $serverengine eq "fml" or lc $serverengine eq "forge" ) {
-            $pingdata = MCMonitorPerl::SocketConnection::mcping( $c, $server->get_column( 'ipaddress' ), $server->get_column( 'port' ) );
-        }
-
-        # parse data result from server or socket connection attempt
-        eval {
-            $pingdata = decode_json( $pingdata );
-        } or do {
-            $pingdata =~ s/IO::Socket::INET: connect: //;
-        };
-        
-        # detect a failed connection as best we can and process based on server up or down state
-        # TODO: see if we can detect other web issues besides web service down and that affect all servers
-        my $serverdata = undef;
-        $c->log->debug("pingdata: " . $pingdata);
-        $c->log->debug("pingdata ref: " . ref($pingdata));
-        if ( ref( $pingdata ) ne 'HASH' or
-             lc $pingdata =~ /failed to connect/ or
-             lc $pingdata =~ /connection refused/ or
-             lc $pingdata =~ /failed to read any data from socket/ or
-             lc $pingdata =~ /timeout/ or
-             $pingdata eq '' or
-             $pingdata eq '0' ) {
-             
-            
+	    # error processing
             if ( $server->get_column( 'state' ) eq "Starting" ) {
                 # play the server starting animation for however many monitoring cycles
                 $c->log->debug("Server $servername is starting state, but still cannot connect");
@@ -146,13 +124,6 @@ sub index :Path :Args(0) {
                 # just play the stopping animation for however monitoring cycles
                 if ( $globalstate{ 'statetracker' }->{ $servername } >= $MAXSTOPPINGSTATECHECKS ) {
                     $globalstate{ 'statetracker' }->{ $servername } = 0;
-                    $server->update(
-                        {
-                            numconnections => $numconnections,
-                            isup => $isup,
-                            state => "Down"
-                        }
-                    );
                 } else {
                     $c->log->debug("Server $servername is stopping state transition");
                     $globalstate{ 'statetracker' }->{ $servername } += 1;
@@ -160,17 +131,8 @@ sub index :Path :Args(0) {
                 }
             } else {
 
-                my $lastchecked = substr( gettimestamp(), 1, length( gettimestamp() ) - 7 );
+                my $lastchecked = $server->get_column( 'lastchecked' );
 
-                # no response from server so update database accordingly
-                $server->update(
-                    {
-                        lastchecked => $lastchecked,
-                        numconnections => $numconnections,
-                        isup => $isup,
-                        state => "Down"
-                    }
-                );
                 $globalstate{ 'statetracker' }->{ $servername } = 0;
 
                 # trigger alarm sound if we've seen this condition for a number of consecutive checks
@@ -185,170 +147,96 @@ sub index :Path :Args(0) {
                 $globalstate{ 'jointrackerdirection' }->{ $servername } = "NoChange";
             }
             
-            $globalstate{ 'lasterror' }->{ $servername } = $pingdata;
-            $c->log->debug("State for $servername is " . $server->get_column( 'state' ) . ", reason: $pingdata");            
+            $globalstate{ 'lasterror' }->{ $servername } = $lasterror;
+            $c->log->debug("State for $servername is " . $server->get_column( 'state' ) . ", reason: " . $lasterror );            
             $c->log->debug("statetracker for $servername is " . $globalstate{ 'statetracker' }->{ $servername } );
 
         } else {
 
+	    # success processing
+
+
+            # get ping data and other things for the server
+            my $numconnections = $server->get_column( 'numconnections' );
+            my $pingdata = decode_json( $server->get_column( 'pingdata' ) );
+
             # reset some server and global states, just in case something was down and is now up
-            $isup = 1;
-            $globalstate{ 'eventtracker' }->{ $servername } = 0;
-            $server->update(
-                {
-                    state => "Running"
+	    $globalstate{ 'eventtracker' }->{ $servername } = 0;
+	    $globalstate{ 'lasterror' }->{ $servername } = "";
+
+            # 
+            #  MINECRAFT
+            # 
+            #  {"description": {"text":""},
+            #   "players":{"max":10,"online":1,"sample":[{"id":"145d43e8-cc3e-433e-baa4-81e711c6880a","name":"botch"}]},
+            #   "version":{"name":"Spigot 1.15.2","protocol":578},"favicon":"data:image/png;base64,..."}
+    
+            #  {"description":"",
+            #   "players":{"max":10,"online":0},
+            #   "version":{"name":"1.7.10","protocol":5},
+            #   "modinfo":{"type":"FML",
+            #              "modList":[{"modid":"mcp","version":"9.05"},
+            #                         {"modid":"FML","version":"7.10.99.99"},
+            #                         {"modid":"Forge","version":"10.13.4.1614"},
+            #                         {"modid":"kimagine","version":"0.2"},
+            #                         {"modid":"obmetaproducer","version":"0.1"},
+            #                         {"modid":"OreSpawn","version":"1.7.10.20.2"},
+            #                         {"modid":"worldedit","version":"6.1.1"}
+            #                        ]
+            #             }
+            #  }
+
+            # process player updates for server
+            # update looks like this: ServerSwitchEvent#sean_ob#ob-lobby#10/29 18:10:26.1026
+            for my $update ( @playerupdates ) {
+                my @fields = split( '#', $update );
+                if ( defined( $fields[2] ) and $fields[2] eq $servername ) {
+                    if ( $fields[0] eq "ServerSwitchEvent" && $servername ne "BungeeCord" ) {
+                        if ( scalar( $globalstate{ 'playertracker' }{ $servername }->keys ) == $MAXPLAYERSTORE ) {
+                            $globalstate{ 'playertracker' }{ $servername }->pop;
+                        }
+                        # get timestamp of event or use current if not there
+                        my $timestamp = gettimestamp();
+                        if ( defined( $fields[3] ) and $fields[3] ne '' ) {
+                            # clean up the timestamp we got from the web call
+                            $fields[3] =~ s/\\n//;
+                            $fields[3] =~ s/\\//;
+                            $timestamp = substr( $fields[3], 0, length( $fields[3] ) - 5 );
+                        }
+                        $globalstate{ 'playertracker' }{ $servername }->unshift( $timestamp => $fields[1] );
+                    }
                 }
-            );
-            $globalstate{ 'lasterror' }->{ $servername } = "";
+            }
 
-            # process the data we have back from the server based on engine
-            if ( $serverengine eq "Source" && $serverdata ne "" ) {
-                #
-                # SOURCE
-                #
-                # {"Protocol":17,"HostName":"CounterStrike","Map":"cs_militia","ModDir":"csgo",
-                #  "ModDesc":"Counter-Strike: Global Offensive","AppID":730,"Players":0,"MaxPlayers":30,"Bots":0,
-                #  "Dedicated":"d","Os":"l","Password":false,"Secure":true,"Version":"1.37.4.0",
-                #  "ExtraDataFlags":161,"GamePort":27015,"GameTags":"empty,secure","GameID":730}
+            # sync our player tracker - needed at startup of monitoring, or when thing's just go awry
+            # note: we can't add them in the order they joined
+            if ( $numconnections > 0 && scalar( $globalstate{ 'playertracker' }{ $servername }->keys ) == 0 && $servername ne "BungeeCord" ) {
+                my $onlineplayers = $pingdata->{ 'players' }{ 'sample' };
+                if ( scalar( @$onlineplayers ) > 0 ) {
 
-                # {"Protocol":17,"HostName":"GMod Server - PVP Sandbox * M9K|Simfp|Gredwitch|LFS| NoRank!",
-                #  "Map":"gmod_fort_map","ModDir":"garrysmod","ModDesc":"Sandbox","AppID":4000,"Players":0,"MaxPlayers":16,
-                #  "Bots":0,"Dedicated":"d","Os":"l","Password":false,"Secure":true,"Version":"2019.11.12",
-                #  "ExtraDataFlags":177,"GamePort":27016,"SteamID":90132776141476868,"GameTags":" gm:sandbox","GameID":4000}
-
-                # retrieve current number of connections from server                
-                if ( defined ( $pingdata->{ 'Players' } ) ) {
-                    $numconnections = $pingdata->{'Players'};
-                }
-
-                # detect some less common changes and update db if changed
-                if ( defined( $pingdata->{ 'Version'} ) ) {
-                    if ( $server->get_column( 'engineversion' ) != $pingdata->{ 'Version' } ) {
-                        $server->update(
-                            {
-                                engineversion => $pingdata->{ 'Version' }
+                    # look through tracker and add any missing players
+                    for my $onlineplayer ( @$onlineplayers ) {
+                        my $player = $onlineplayer->{ 'name' };
+                        my $found = 0;
+                        my $iter = $globalstate{'playertracker'}{$servername}->iterator;
+                        while( ( my $k, my $v ) = $iter->() ) {
+                            if ( $v eq $player ) {
+                                $found = 1;
                             }
-                        );
-                    }
-                }
-
-            } else {
-                # 
-                #  MINECRAFT
-                # 
-                #  {"description": {"text":""},
-                #   "players":{"max":10,"online":1,"sample":[{"id":"145d43e8-cc3e-433e-baa4-81e711c6880a","name":"botch"}]},
-                #   "version":{"name":"Spigot 1.15.2","protocol":578},"favicon":"data:image/png;base64,..."}
-     
-                #  {"description":"",
-                #   "players":{"max":10,"online":0},
-                #   "version":{"name":"1.7.10","protocol":5},
-                #   "modinfo":{"type":"FML",
-                #              "modList":[{"modid":"mcp","version":"9.05"},
-                #                         {"modid":"FML","version":"7.10.99.99"},
-                #                         {"modid":"Forge","version":"10.13.4.1614"},
-                #                         {"modid":"kimagine","version":"0.2"},
-                #                         {"modid":"obmetaproducer","version":"0.1"},
-                #                         {"modid":"OreSpawn","version":"1.7.10.20.2"},
-                #                         {"modid":"worldedit","version":"6.1.1"}
-                #                        ]
-                #             }
-                #  }
-
-                # retrieve current number of connections from server
-                if ( defined( $pingdata->{ 'players' } ) ) {
-                    if ( defined( $pingdata->{ 'players' }{ 'online' } ) ) {
-                        $numconnections = $pingdata->{ 'players' }{ 'online' };
-                    }
-                }
-
-                # process player updates for server
-                # update looks like this: ServerSwitchEvent#sean_ob#ob-lobby#10/29 18:10:26.1026
-                for my $update ( @playerupdates ) {
-                    my @fields = split( '#', $update );
-                    if ( defined( $fields[2] ) and $fields[2] eq $servername ) {
-                        if ( $fields[0] eq "ServerSwitchEvent" && $servername ne "BungeeCord" ) {
+                        }
+                        if ( $found == 0 ) {
                             if ( scalar( $globalstate{ 'playertracker' }{ $servername }->keys ) == $MAXPLAYERSTORE ) {
                                 $globalstate{ 'playertracker' }{ $servername }->pop;
                             }
-                            # get timestamp of event or use current if not there
                             my $timestamp = gettimestamp();
-                            if ( defined( $fields[3] ) and $fields[3] ne '' ) {
-                                # clean up the timestamp we got from the web call
-                                $fields[3] =~ s/\\n//;
-                                $fields[3] =~ s/\\//;
-                                $timestamp = substr( $fields[3], 0, length( $fields[3] ) - 5 );
-                            }
-                            $globalstate{ 'playertracker' }{ $servername }->unshift( $timestamp => $fields[1] );
+                            $globalstate{ 'playertracker' }{ $servername }->unshift( $timestamp => $player );
                         }
-                    }
-                }
-
-                # sync our player tracker - needed at startup of monitoring, or when thing's just go awry
-                # note: we can't add them in the order they joined
-                if ( $numconnections > 0 && scalar( $globalstate{ 'playertracker' }{ $servername }->keys ) == 0 && $servername ne "BungeeCord" ) {
-                    my $onlineplayers = $pingdata->{ 'players' }{ 'sample' };
-                    if ( scalar( @$onlineplayers ) > 0 ) {
-
-                        # look through tracker and add any missing players
-                        for my $onlineplayer ( @$onlineplayers ) {
-                            my $player = $onlineplayer->{ 'name' };
-                            my $found = 0;
-                            my $iter = $globalstate{'playertracker'}{$servername}->iterator;
-                            while( ( my $k, my $v ) = $iter->() ) {
-                                if ( $v eq $player ) {
-                                    $found = 1;
-                                }
-                            }
-                            if ( $found == 0 ) {
-                                if ( scalar( $globalstate{ 'playertracker' }{ $servername }->keys ) == $MAXPLAYERSTORE ) {
-                                    $globalstate{ 'playertracker' }{ $servername }->pop;
-                                }
-                                my $timestamp = gettimestamp();
-                                $globalstate{ 'playertracker' }{ $servername }->unshift( $timestamp => $player );
-                            }
-                        }
-                    }
-                }
-
-
-                # detect some less common changes and update db if changed
-                if ( defined( $pingdata->{ 'version'}{ 'name' } ) ) {
-                    my $versionstring = $pingdata->{ 'version'}{ 'name' };
-                    my %replacements = ( "thermos" => "", "cauldron" => "", "craftbukkit" => "", "mcpc" => "", "kcauldron" => "",
-                                         "forge " => "", "Forge " => "", "Spigot " => "", "BungeeCord " => "", "spigot " => "" );
-                    $versionstring =~ s/(@{[join "|", keys %replacements]})/$replacements{$1}/g;
-                    if ( $server->get_column( 'engineversion' ) ne $versionstring ) {
-                        $server->update(
-                            {
-                                engineversion => $versionstring
-                            }
-                        );
                     }
                 }
             }
-    
+
             # check number of connections and set state accordingly
             my $playercountchange = $self->checkplayercountchange( $c, $servername, $numconnections );
-
-            # update database with changed data
-            if ( !defined( $server->get_column( 'numconnections' ) ) || !defined( $server->get_column( 'isup' ) ) ||
-                $server->get_column( 'numconnections' ) != $numconnections || $server->get_column( 'isup' ) != $isup ) {
-                $server->update(
-                    {
-                        numconnections => $numconnections,
-                        isup => $isup
-                    }
-                );
-            }
-
-            # update last check timestamp
-            my $lastchecked = substr( gettimestamp(), 1, length( gettimestamp() ) - 7 );
-            $server->update(
-                {
-                    lastchecked => $lastchecked
-                }
-            );
 
             # manage state - give starting or stopping a few monitoring cycles
             if ( $server->get_column( 'state' ) eq "Starting" ) {
@@ -366,7 +254,7 @@ sub index :Path :Args(0) {
             if ( $server->get_column( 'state' ) eq "Stopping" ) {
                 if ( $globalstate{ 'statetracker' }->{ $servername } >= $MAXSTOPPINGSTATECHECKS ) {
                     $globalstate{ 'statetracker' }->{ $servername } = 0;
-                    $server->update(
+		    $server->update(
                         {
                             state => "Down"
                         }
@@ -402,9 +290,10 @@ sub index :Path :Args(0) {
 
     # load up our template with our data
     $c->stash( 
-               serverlist => $serverlist,
-               globalstate => \%globalstate,
-               template => 'template/root/index.tt2' );
+        serverlist => $serverlist,
+        globalstate => \%globalstate,
+        template => 'template/root/index.tt2'
+    );
 }
 
 =head2 default
@@ -513,30 +402,7 @@ sub getplayerupdates :Private {
         $response =~ s/"//g;
     }
 
-    return $response;
-}
-
-=head2 get server status
-
-=cut
-
-sub getserverstatus :Private {
-    my( $self, $c, $ua, $ip, $port, $engine ) = @_;
-
-    if ( $engine eq "Spigot" || $engine eq "Paper" || $engine eq "FML" ) {
-	    $engine = "Minecraft";
-    }
-
-    my $url = 'https://ob-mc.net/serverquery/query.php';
-    my $req = $ua->post( $url,
-        {
-            'ip' => "$ip",
-            'port' => "$port",
-            'svrtype' => "$engine"
-        }
-    );
-    my $response = $req->decoded_content();
-
+    $c->log->debug("puquery: " . $response);
     return $response;
 }
 
@@ -574,6 +440,31 @@ sub checkwebserverstatus {
     return $status;
 }
 
+=head2 check monitoring agent is running
+
+=cut
+
+sub checkagentstatus {
+    my( $self, $c ) = @_;
+
+    my $status = 0;
+    my $t = Proc::ProcessTable->new;
+    # look for perl or shell processes of the monitoring agent
+    foreach my $p (@{$t->table}) {
+    if ( defined( $p->{ cwd } ) and $p->{ cwd } =~ /MCMonitorPerl\/Agent/ ) {
+        if ( grep $_ =~ /MCMonitorAgent.sh/, $p->{ cmdline } or grep $_ =~ /MCMonitorAgent.pl/, $p->{ cmdline } ) {
+        $status++;
+        }
+        if ( $p->{ cmndline } =~ /MCMonitorAgent.sh/ or $p->{ cmndline } =~ /MCMonitorAgent.pl/ ) {
+            $status++;
+        }
+    }
+    }
+
+    return $status;
+    
+}
+
 =head2 web service unavailable
 
 =cut
@@ -583,6 +474,17 @@ sub webdown :Private {
 
     my %status = ( 'issue' => 'Web service unavailable! Please check!', 'lastchecked' => gettimestamp() );
     $c->stash( status => \%status, template => 'template/root/webdown.tt2' );
+}
+
+=head2 monitoring agent unavailable
+
+=cut
+
+sub agentdown :Private {
+    my( $self, $c ) = @_;
+
+    my %status = ( 'issue' => 'Monitoring agent unavailable! Please check!', 'lastchecked' => gettimestamp() );
+    $c->stash( status => \%status, template => 'template/root/agentdown.tt2' );
 }
 
 =head1 AUTHOR
