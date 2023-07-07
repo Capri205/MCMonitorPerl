@@ -201,7 +201,7 @@ sub index :Path :Args(0) {
                             # clean up the timestamp we got from the web call
                             $fields[3] =~ s/\\n//;
                             $fields[3] =~ s/\\//;
-                            $timestamp = substr( $fields[3], 0, length( $fields[3] ) - 5 );
+                            $timestamp = substr( $fields[3], 0, length( $fields[3] ) - ( length( $fields[3] ) - 14 ) );
                         }
                         $globalstate{ 'playertracker' }{ $servername }->unshift( $timestamp => $fields[1] );
                     }
