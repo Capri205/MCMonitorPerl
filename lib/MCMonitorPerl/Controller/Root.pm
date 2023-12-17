@@ -96,10 +96,12 @@ sub index :Path :Args(0) {
 
     # get player updates
     my $playerupdates = $self->getplayerupdates( $c, $ua );
+    $c->log->debug("debug - playerupdates1: $playerupdates");
     $playerupdates =~ s/^\[\"//; $playerupdates =~ s/\"\]$//;
+    $c->log->debug("debug - playerupdates2: $playerupdates");
     chomp( $playerupdates );
     my @playerupdates = split( ',', $playerupdates );
-    $c->log->debug("debug - playerupdates: $playerupdates");
+    $c->log->debug("debug - playerupdates3: $playerupdates");
 
     # loop through our servers setting up state for our view call
     for my $server ( @$serverlist ) {
@@ -199,9 +201,17 @@ sub index :Path :Args(0) {
                         my $timestamp = gettimestamp();
                         if ( defined( $fields[3] ) and $fields[3] ne '' ) {
                             # clean up the timestamp we got from the web call
+			    #
+			    #   06\/29 09:04:50.450\n
+                            #   06/29 09:04:5
+			    #
+			    #   06\/29 08:57:29.5729\n
+                            #   06/29 08:57:29
+			    $c->log->debug("debug - pre fix timestamp: " . $fields[3]);
                             $fields[3] =~ s/\\n//;
                             $fields[3] =~ s/\\//;
-                            $timestamp = substr( $fields[3], 0, length( $fields[3] ) - 5 );
+                            $timestamp = substr( $fields[3], 0, length( $fields[3] ) - ( length( $fields[3] ) - 14 ) );
+			    $c->log->debug("debug - fix timestamp: $timestamp");
                         }
                         $globalstate{ 'playertracker' }{ $servername }->unshift( $timestamp => $fields[1] );
                     }
