@@ -5,7 +5,9 @@ use JSON;
 use SocketConnection 'mcping';
 use Time::HiRes qw( usleep gettimeofday );
 use POSIX qw( strftime );
+use Log::Log4perl;
 use Data::Dumper;
+
 
 my $driver = "SQLite";
 my $user = "";
@@ -56,7 +58,6 @@ while ( $stopmonitoring == 0 ) {
         if ( lc $serverengine eq "spigot" or lc $serverengine eq "fml" or
          lc $serverengine eq "forge" or lc $serverengine eq "paper" ) {
             $pingjson = SocketConnection::mcping( $server->{ ipaddress }, $server->{ port } );
-            print Dumper( $pingjson );
         }
     
         my $lastchecked = substr( gettimestamp(), 1, length( gettimestamp() ) - 7 );
@@ -84,6 +85,16 @@ while ( $stopmonitoring == 0 ) {
             next;
         }
     
+        if ( defined( $pingdata->{ version} ) ) {
+            print Dumper( $pingdata->{ version } );
+        }
+        if ( defined( $pingdata->{ modinfo} ) ) {
+            print Dumper( $pingdata->{ modinfo } );
+        }
+        if ( defined( $pingdata->{ players } ) ) {
+            print Dumper( $pingdata->{ players } );
+        }
+
         # parse mc ping data based on engine type
         $isup = 1; $state = 'Running'; $lasterror = ""; 
     

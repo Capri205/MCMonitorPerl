@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 
 export HOME=/home/mcmonitor/MCMonitorPerl
