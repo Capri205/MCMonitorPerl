@@ -21,12 +21,8 @@ my $interval = 10;
 my $stopmonitoring = 0;
 
 print "Starting monitoring @ " . localtime() . "\n";
-my $iteration = 0;
 while ( $stopmonitoring == 0 ) {
     
-    ++$iteration;
-    print $iteration . "\n";
-
     # get server list from database
     my $serverlist = $dbh->selectcol_arrayref( "select servername from servers", { Columns => [1] } );
 
@@ -36,7 +32,7 @@ while ( $stopmonitoring == 0 ) {
 
         my $isup = 0; my $numconnections = 0; my $state = 'Down'; my $lasterror = "";
 
-        print "Checking $servername\n";
+#        print "Checking $servername\n";
 
         # get server data
         my $sql = "select * from servers where servername = ?";
@@ -45,23 +41,29 @@ while ( $stopmonitoring == 0 ) {
         my $server = $srv_hdl->fetchrow_hashref();
     
         # don't check servers that are in a transition state 
-	my $serverstate = $server->{ state };
-	print "Server state is " . $serverstate . "\n";
-	if ( $serverstate eq "Starting" or $serverstate eq "Stopping" ) {
-	    print "Skipping this server\n";
-	    next;
+        my $serverstate = $server->{ state };
+        print "Server $servername - state: " . $serverstate . "\n";
+        if ( $serverstate eq "Starting" or $serverstate eq "Stopping" ) {
+#            print "Skipping this server\n";
+            next;
         }
+
+        my $lastchecked = substr( gettimestamp(), 1, length( gettimestamp() ) - 7 );
 
         # ping the server to see if it's alive and get some basic ping data back
         my $pingjson; my $pingdata;
-        my $serverengine = $server->{ enginetype };
-        if ( lc $serverengine eq "spigot" or lc $serverengine eq "fml" or
-         lc $serverengine eq "forge" or lc $serverengine eq "paper" ) {
-            $pingjson = SocketConnection::mcping( $server->{ ipaddress }, $server->{ port } );
+        $pingjson = SocketConnection::mcping( $server->{ ipaddress }, $server->{ port } );
+    
+        # catch edge cases like server starting messages
+        if ( $pingjson =~ /Server is still starting/ ) {
+            $dbh->do("
+                update servers set numconnections=$numconnections, isup=$isup, state='Starting',
+                                   lasterror='starting', lastchecked = '$lastchecked', pingdata = '{}'
+                where servername = '$servername'
+            ") or die "Failed to update servers table: " . DBI->errstr;
+            next;
         }
-    
-        my $lastchecked = substr( gettimestamp(), 1, length( gettimestamp() ) - 7 );
-    
+
         # parse data result from server or socket connection attempt
         my $goterror = 0;
         eval {
@@ -71,10 +73,11 @@ while ( $stopmonitoring == 0 ) {
         };
     
         if ( $goterror ) {
+
             # parse error - strip out this text to get actual error and post state to database
             $pingjson =~ s/^IO::Socket::INET: connect: //;
-	    
-	    print "debug - server: $servername, isup: $isup, state: $state\n";
+
+#            print "debug - server: $servername, isup: $isup, state: $state\n";
     
             $dbh->do("
                 update servers set numconnections=$numconnections, isup=$isup, state='$state',
@@ -85,16 +88,6 @@ while ( $stopmonitoring == 0 ) {
             next;
         }
     
-        if ( defined( $pingdata->{ version} ) ) {
-            print Dumper( $pingdata->{ version } );
-        }
-        if ( defined( $pingdata->{ modinfo} ) ) {
-            print Dumper( $pingdata->{ modinfo } );
-        }
-        if ( defined( $pingdata->{ players } ) ) {
-            print Dumper( $pingdata->{ players } );
-        }
-
         # parse mc ping data based on engine type
         $isup = 1; $state = 'Running'; $lasterror = ""; 
     
@@ -143,7 +136,7 @@ while ( $stopmonitoring == 0 ) {
         $dbh->do("
             update servers set numconnections=$numconnections, isup=$isup, state='$state',
                                lasterror='$lasterror', lastchecked = '$lastchecked', pingdata = '$pingjson'
-			       $versionupd
+                               $versionupd
             where servername = '$servername'
         ") or die "Failed to update servers table: " . DBI->errstr;
     }

@@ -33,6 +33,8 @@ our $MAXPLAYERSTORE = 5;
 our $MAXSTARTINGSTATECHECKS = 3;
 our $MAXSTOPPINGSTATECHECKS = 1;
 
+my $offsetplayertrackeronstart = 'true';
+
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -209,6 +211,9 @@ sub getserverupdates :Path( "/getserverstatus" ) Chained( . ) Args( 0 ) {
     $playerupdates =~ s/^\[\"//; $playerupdates =~ s/\"\]$//;
     chomp( $playerupdates );
     my @playerupdates = split( ',', $playerupdates );
+    $c->log->debug("-----------playerupdates--------------");
+    $c->log->debug(Dumper( @playerupdates ));
+    $c->log->debug("--------------------------------------");
 
     my %serverdata;
     for my $server ( @$serverlist ) {
@@ -252,6 +257,38 @@ sub getserverupdates :Path( "/getserverstatus" ) Chained( . ) Args( 0 ) {
         $data{ lasterror } = $server->get_column( 'lasterror' );
         $data{ state } = $server->get_column( 'state' );
         $data{ numconnections } = $server->get_column( 'numconnections' );
+
+        # process player updates for server - regardless of up or down
+        # update looks like this: ServerSwitchEvent#sean_ob#ob-lobby#10/29 18:10:26.1026
+        for my $update ( @playerupdates ) {
+            $c->log->debug($servername . " update: " . $update);
+            
+            my @fields = split( '#', $update );
+            if ( defined( $fields[2] ) and $fields[2] eq $servername ) {
+                if ( $fields[0] eq "ServerSwitchEvent" and $servername ne "BungeeCord" ) {
+
+                    if ( defined( $globalstate{ 'playertracker' }{ $servername } ) and scalar( @{$globalstate{ 'playertracker' }{ $servername }} ) == $MAXPLAYERSTORE ) {
+                        pop @{ $globalstate{ 'playertracker' }{ $servername } };
+                    }
+                    # get timestamp of event or use current if not there
+                    my $timestamp = gettimestamp();
+                    if ( defined( $fields[3] ) and $fields[3] ne '' ) {
+                        # clean up the timestamp we got from the web call
+			    #
+		            #   06\/29 09:04:50.450\n
+                        #   06/29 09:04:5
+		            #
+    		    #   06\/29 08:57:29.5729\n
+                        #   06/29 08:57:29
+		            $c->log->debug("debug - pre fix timestamp: " . $fields[3]);
+                        $fields[3] =~ s/\\n//;
+                        $fields[3] =~ s/\\//;
+                        $timestamp = substr( $fields[3], 0, length( $fields[3] ) - ( length( $fields[3] ) - 14 ) );
+                    }
+                    unshift @{ $globalstate{ 'playertracker' }{ $servername } }, $timestamp . "#" . $fields[1];
+                }
+            }
+        }
 
         # more finely process server state for globalstate
         my $lasterror = $server->get_column( 'lasterror' );
@@ -307,48 +344,8 @@ sub getserverupdates :Path( "/getserverstatus" ) Chained( . ) Args( 0 ) {
             $globalstate{ 'eventtracker' }->{ $servername } = 0;
             $globalstate{ 'lasterror' }->{ $servername } = "";
 
-            # process player updates for server
-            # update looks like this: ServerSwitchEvent#sean_ob#ob-lobby#10/29 18:10:26.1026
-            for my $update ( @playerupdates ) {
-                $c->log->debug($servername . " update: " . $update);
-                
-                my @fields = split( '#', $update );
-                if ( defined( $fields[2] ) and $fields[2] eq $servername ) {
-                    if ( $fields[0] eq "ServerSwitchEvent" and $servername ne "BungeeCord" ) {
-
-                        if ( defined( $globalstate{ 'playertracker' }{ $servername } ) ) {
-                            $c->log->debug("ref: " . $globalstate{ 'playertracker' }{ $servername } );
-                            $c->log->debug("debug - pop: " . scalar( @{$globalstate{ 'playertracker' }{ $servername }} ) );
-                        } else {
-                            $c->log->debug("debug - playertracker for $servername not defined or populated yet");
-                        }
-                        if ( defined( $globalstate{ 'playertracker' }{ $servername } ) and scalar( @{$globalstate{ 'playertracker' }{ $servername }} ) == $MAXPLAYERSTORE ) {
-                            $c->log->debug("debug - pre pop: " . scalar( @{$globalstate{ 'playertracker' }{ $servername }} ) );
-                            pop @{ $globalstate{ 'playertracker' }{ $servername } };
-                            $c->log->debug("debug - post pop: " . scalar( @{$globalstate{ 'playertracker' }{ $servername }} ) );
-                        }
-                        # get timestamp of event or use current if not there
-                        my $timestamp = gettimestamp();
-                        if ( defined( $fields[3] ) and $fields[3] ne '' ) {
-                            # clean up the timestamp we got from the web call
-			    #
-		            #   06\/29 09:04:50.450\n
-                            #   06/29 09:04:5
-		            #
-        		    #   06\/29 08:57:29.5729\n
-                            #   06/29 08:57:29
-		            $c->log->debug("debug - pre fix timestamp: " . $fields[3]);
-                            $fields[3] =~ s/\\n//;
-                            $fields[3] =~ s/\\//;
-                            $timestamp = substr( $fields[3], 0, length( $fields[3] ) - ( length( $fields[3] ) - 14 ) );
-			    $c->log->debug("debug - fix timestamp: $timestamp");
-                        }
-                        unshift @{ $globalstate{ 'playertracker' }{ $servername } }, $timestamp . "#" . $fields[1];
-                    }
-                }
-            }
-
-            # sync our player tracker - needed at startup of monitoring, or when thing's just go awry
+            # sync our player tracker for up servers
+            # needed at startup of monitoring, or when thing's just go awry
             # note: we can't add them in the order they joined
             if ( $numconnections > 0 and scalar( $globalstate{ 'playertracker' }{ $servername } ) == 0 and $servername ne "BungeeCord" ) {
                 my $onlineplayers = $pingdata->{ 'players' }{ 'sample' };
@@ -458,7 +455,8 @@ sub getplayerupdates :Private {
     my $req = $ua->post( $url,
         {
             'id' => 'MCMonitor',
-            'Content-type' => 'application/json'
+            'Content-type' => 'application/json',
+            'offset' => $offsetplayertrackeronstart
         }
     );
     my $response = $req->decoded_content();
@@ -470,6 +468,8 @@ sub getplayerupdates :Private {
         $response =~ s/\\n\"\]//;
         $response =~ s/"//g;
     }
+
+    $offsetplayertrackeronstart = 'false';
 
     $c->log->debug("puquery: " . $response);
     return $response;

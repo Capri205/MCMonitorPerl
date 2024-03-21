@@ -6,6 +6,14 @@ function fetchUpdates() {
         .then( response => response.json() )
         .then( data => {
 
+            // hide error box
+            document.getElementById( "errormsg" ).textContent = '';
+            document.getElementById( "errormsg" ).style.display = 'none';
+            document.getElementById( "errorh1" ).style.display = 'none';
+            document.getElementById( "errorh2" ).style.display = 'none';
+            var soundStop = document.getElementById( "catalystdownsound" );
+            if ( soundStop != null ) { soundStop.pause(); soundStop.currentTime = 0; }
+
             // extract globalstate from serverlist as it's not a server
             // it's just a cheap way to transfer everything needed in one update
 
@@ -142,6 +150,11 @@ function fetchUpdates() {
         })
         .catch(error => {
             console.error( 'Error fetching updates:', error );
+            document.getElementById( "errormsg" ).textContent = error;
+            document.getElementById( "errormsg" ).style.display = 'block';
+            document.getElementById( "errorh1" ).style.display = 'block';
+            document.getElementById( "errorh2" ).style.display = 'block';
+            document.getElementById( "catalystdownsound" ).play();
         });
 }
 

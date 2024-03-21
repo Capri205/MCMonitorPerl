@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset = "utf8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+    <link href="/static/css/site.css" rel="stylesheet">
+
+    <script src="/static/js/jquery-3.4.1.js"></script>
+    <script src="/static/js/bootstrap.js"></script>
+    <script src="/static/js/modernizr-2.8.3.js"></script>
+
+    [% title = "Monitoring Issues Detected" %]
+  
+    <audio id="sshfail"><source src="/static/sounds/catalystdown.wav" loop /></audio>
+
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">MCMonitor</a>
+        </div>
+        <div class="navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="monitor">Monitor</a></li>
+            <li><a href="servers">Servers</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container body-content">
+
+      <meta http-equiv="refresh" content="30">
+
+      <h2>[% title %]</h2>
+  
+      <table class="table">
+        <thead>
+          <tr>
+            <th>
+              Issue
+            </th>
+            <th>
+              LastChecked
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+            <tr>
+              <td>
+                [% status.issue %]
+              </td>
+              <td>
+                [% status.lastchecked %]
+              </td>
+            </tr>
+        </tbody>
+      </table>
+
+      <hr />
+      <span class="message">[% status_msg %]</span>
+      <span class="error">[% error_msg %]</span>
+      <hr />
+
+      <footer>
+        <p>&copy; 2021 - MCMonitor</p>
+      </footer>
+  
+    </div>
+  </body>
+</html>

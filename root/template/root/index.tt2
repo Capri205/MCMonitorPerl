@@ -5,6 +5,14 @@
     <meta charset = "utf8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    [% title = "Server Dashboard" %]
+    [% currEngine = "NaN" %]
+  
+    <audio id="alarmsound"><source src="static/sounds/alarm.wav" loop /></audio>
+    <audio id="joinsound"><source src="static/sounds/joined.wav" autoplay /></audio>
+    <audio id="leavesound"><source src="static/sounds/departed.wav" autoplay /></audio>
+    <audio id="catalystdownsound"><source src="static/sounds/catalystdown.wav" loop /></audio>
+
     <link href="static/css/bootstrap.css" rel="stylesheet">
     <link href="static/css/site.css" rel="stylesheet">
 
@@ -14,12 +22,6 @@
     <script src="static/js/darktheme.js"></script>
     <script src="static/js/getupdates.js"></script>
 
-    [% title = "Server Dashboard" %]
-    [% currEngine = "NaN" %]
-  
-    <audio id="alarmsound"><source src="static/sounds/alarm.wav" loop /></audio>
-    <audio id="joinsound"><source src="static/sounds/joined.wav" autoplay /></audio>
-    <audio id="leavesound"><source src="static/sounds/departed.wav" autoplay /></audio>
 
   </head>
 
@@ -76,12 +78,11 @@
         </tbody>
       </table>
 
-      [% IF status_msg != "" or error_msg != "" %]
-        <hr />
-        <span class="message">[% status_msg %]</span>
-        <span class="error">[% error_msg %]</span>
-        <hr />
-      [% END %]
+      <hr id="errorh1" hidden />
+      <span id="statusmsg" class="message" hidden>[% status_msg %]</span>
+      <span id="errormsg" class="error" hidden>[% error_msg %]</span>
+      <hr id="errorh2" hidden />
+
       <footer>
         <p>&copy; 2021 - MCMonitor</p>
       </footer>

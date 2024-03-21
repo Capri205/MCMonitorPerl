@@ -20,7 +20,7 @@ sub mcping {
         Timeout => 1,
     );
     if ( $socket ) {
-        print "Socket connection established to $ip : $port\n";
+#        print "Socket connection established to $ip : $port\n";
         
         # build basic minecraft server ping
         my $senddata = "\x00"; # packet id (varint)
@@ -45,7 +45,7 @@ sub mcping {
         
         
     } else {
-        print "Failed to make socket connection to $ip : $port";
+#        print "Failed to make socket connection to $ip : $port\n";
         $retdata = $@;
         $socket = undef;
     }
