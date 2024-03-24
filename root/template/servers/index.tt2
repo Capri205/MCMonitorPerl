@@ -8,6 +8,10 @@
     <link href="static/css/site.css" rel="stylesheet">
 
     <script src="static/js/modernizr-2.8.3.js"></script>
+    <script src="static/js/jquery-3.4.1.js"></script>
+    <script src="static/js/bootstrap.js"></script>
+    <script src="static/js/darktheme.js"></script>
+    <script src="static/js/getupdates.js"></script>
 
     [% title = "Servers" %]
 
@@ -29,7 +33,8 @@
           <ul class="nav navbar-nav">
             <li><a href="/manage">Manage</a></li>
             <li><a href="/servers">Servers</a></li>
-            <li><a>Dark Theme: <label class="switch"><input class="toggle-darktheme" type="checkbox"><span class="slider round"></span></label></a></li>
+            <li><a>Dark Theme: <label class="switch"><input class="toggle-darktheme" id="toggle-darktheme" type="checkbox"><span
+ class="slider round"></span></label></a></li>
           </ul>
         </div>
       </div>
@@ -136,9 +141,9 @@
 
     </div>
 
-    <script src="static/js/jquery-3.4.1.js"></script>
-    <script src="static/js/bootstrap.js"></script>
-    <script src="static/js/darktheme.js"></script>
+    <script>
+      handleServerUpdates( "deactivate" );
+    </script>
 
   </body>
 </html>

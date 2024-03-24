@@ -43,6 +43,7 @@ sub index :Path :Args(0) {
 
     $c->stash( serverlist => [ $c->model( 'DB::Servers' )->all ] );
 
+    $c->stash( handleupdates => "deactivate" );
     $c->stash( template => 'template/manage/index.tt2' );
 }
 

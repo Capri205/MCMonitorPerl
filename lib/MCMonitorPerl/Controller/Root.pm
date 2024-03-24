@@ -83,6 +83,7 @@ sub index :Path :Args(0) {
 
     # load up web page where update js will refresh data via ajax call
     # to getserverupdates subroutine 
+    $c->stash( handleupdates => "activate" );
     $c->stash( template => 'template/root/index.tt2' );
 }
 
@@ -183,7 +184,9 @@ sub getserverupdates :Path( "/getserverstatus" ) Chained( . ) Args( 0 ) {
     # check web connection
     if ( !$self->checkwebserverstatus( $c ) ) {
         $c->log->error("Error: Web service not available.");
-        $c->detach( 'webdown' );
+        my %status = ( 'issue' => 'Web service unavailable! Please check!', 'lastchecked' => gettimestamp() );
+        $c->stash( status => \%status );
+        return; 
     }
     $c->log->info("Web service appears to be running.");
 

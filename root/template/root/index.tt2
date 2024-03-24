@@ -22,11 +22,11 @@
     <script src="static/js/darktheme.js"></script>
     <script src="static/js/getupdates.js"></script>
 
-
   </head>
 
   <body>
 
+    <input type="text" id="handleupdates" value="[% handleupdates %]" hidden>
 
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="container">
@@ -88,5 +88,10 @@
       </footer>
   
     </div>
+
+    <script>
+      handleServerUpdates( document.getElementById( "handleupdates" ).value );
+    </script>
+
   </body>
 </html>

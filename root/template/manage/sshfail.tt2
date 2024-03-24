@@ -10,14 +10,18 @@
     <script src="/static/js/jquery-3.4.1.js"></script>
     <script src="/static/js/bootstrap.js"></script>
     <script src="/static/js/modernizr-2.8.3.js"></script>
+    <script src="/static/js/darktheme.js"></script>
+    <script src="/static/js/getupdates.js"></script>
 
     [% title = "Monitoring Issues Detected" %]
   
-    <audio id="sshfail"><source src="/static/sounds/catalystdown.wav" loop /></audio>
+    <audio id="sshfail"><source src="/static/sounds/catalystdown.wav" /></audio>
 
   </head>
 
   <body>
+
+    <input type="text" id="handleupdates" value="[% handleupdates %]" hidden>
 
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="container">
@@ -31,16 +35,16 @@
         </div>
         <div class="navbar-collapse">
           <ul class="nav navbar-nav">
-            <li><a href="monitor">Monitor</a></li>
+            <li><a href="manage">Manage</a></li>
             <li><a href="servers">Servers</a></li>
+            <li><a>Dark Theme: <label class="switch"><input class="toggle-darktheme" id="toggle-darktheme" type="checkbox"><span
+ class="slider round"></span></label></a></li>
           </ul>
         </div>
       </div>
     </div>
 
     <div class="container body-content">
-
-      <meta http-equiv="refresh" content="30">
 
       <h2>[% title %]</h2>
   
@@ -77,5 +81,15 @@
       </footer>
   
     </div>
+
+    <script>
+      handleServerUpdates( "deactivate" );
+      const audioElement = document.getElementById( "sshfail" );
+      if (audioElement) {
+        audioElement.loop = true;
+        audioElement.play();
+      }
+    </script>
+
   </body>
 </html>
