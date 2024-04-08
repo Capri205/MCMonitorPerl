@@ -30,8 +30,8 @@ our %globalstate = (
 );
 our $MAXCHECKSB4ALARM = 3;
 our $MAXPLAYERSTORE = 5;
-our $MAXSTARTINGSTATECHECKS = 3;
-our $MAXSTOPPINGSTATECHECKS = 1;
+our $MAXSTARTINGSTATECHECKS = 12;
+our $MAXSTOPPINGSTATECHECKS = 3;
 
 my $offsetplayertrackeronstart = 'true';
 
@@ -526,10 +526,11 @@ sub checkagentstatus {
 
     my $status = 0;
     my $t = Proc::ProcessTable->new;
+
     # look for perl or shell processes of the monitoring agent
     foreach my $p (@{$t->table}) {
-        if ( defined( $p->{ cmndline } ) and ( $p->{ cmndline } =~ /MCMonitorAgent.sh/ or $p->{ cmndline } =~ /MCMonitorAgent.p
-l/ ) ) {
+        if ( defined( $p->{ cmndline } ) and
+             ( $p->{ cmndline } =~ /MCMonitorAgent.sh/ or $p->{ cmndline } =~ /MCMonitorAgent.pl/ ) ) {
             $status++;
         }
         if ( defined( $p->{ cmdline } ) and ( grep $_ =~ /MCMonitorAgent.sh/, $p->{ cmdline } or grep $_ =~ /MCMonitorAgent.pl/

@@ -7,7 +7,7 @@ __PACKAGE__->config(
     schema_class => 'MCMonitorPerl::Schema::MCMonitorDB',
     
     connect_info => {
-        dsn => 'dbi:SQLite:root/db/mcmonitor.db',
+        dsn => 'dbi:SQLite:/home/mcmonitor/MCMonitorPerl/root/db/mcmonitor.db',
         user => '',
         password => '',
         on_connect_do => q{PRAGMA foreign_keys = ON},

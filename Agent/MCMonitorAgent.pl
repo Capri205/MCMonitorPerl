@@ -1,5 +1,10 @@
+#!/usr/local/bin/perl
+#
+
 use strict;
 use warnings;
+
+use lib '/home/mcmonitor/MCMonitorPerl/Agent/lib';
 use DBI;
 use JSON;
 use SocketConnection 'mcping';

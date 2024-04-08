@@ -19,6 +19,7 @@ my %sshparams = (
     port => 8105,
     user => 'mcadmin',
     key_path => $identityfile,
+    master_opts => [-o => "StrictHostKeyChecking=no"],
 );
 
 =head1 NAME
@@ -141,23 +142,21 @@ sub getsshconnection {
     my ( $self, $c, $host ) = @_;
 
     BEGIN {
-        $Net::OpenSSH::debug_fh = \*STDOUT;
-        $Net::OpenSSH::debug = ~0;
+        $Net::OpenSSH::debug = -1;
+#        $Net::OpenSSH::debug_fh = \*STDOUT;
+#        $Net::OpenSSH::debug = ~0;
+#        $Net::OpenSSH::debug |= 0x7f;
     }
     $c->log->debug("Identify file: " . $identityfile);
 
     # setup ssh object
     my $sshcon =  Net::OpenSSH->new( $host, %sshparams );
-    #$c->log->debug("--------------");
-    #$c->log->debug(Dumper( $! ));
-    #$c->log->debug(Dumper( $sshcon->error ) );
-    #$c->log->debug("--------------");
     if ( ( defined( $! ) and $! ne '' ) or ( defined( $sshcon->error ) and $sshcon->error != 0 ) ) {
         $c->log->debug( $! );
         $c->log->debug( $sshcon->error );
-        my $errorstr = "Unable to establish SSH connection to $host<br>" . $! . "<br>" . $sshcon->error;
-        $c->stash( sshfailerror  => $errorstr );
-        $c->detach( 'sshfail' );
+#        my $errorstr = "Unable to establish SSH connection to $host<br>" . $! . "<br>" . $sshcon->error;
+#        $c->stash( sshfailerror  => $errorstr );
+#        $c->detach( 'sshfail' );
     }
     $c->log->debug("SSH connection established to $host");
 
