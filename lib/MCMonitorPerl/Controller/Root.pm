@@ -214,9 +214,6 @@ sub getserverupdates :Path( "/getserverstatus" ) Chained( . ) Args( 0 ) {
     $playerupdates =~ s/^\[\"//; $playerupdates =~ s/\"\]$//;
     chomp( $playerupdates );
     my @playerupdates = split( ',', $playerupdates );
-    $c->log->debug("-----------playerupdates--------------");
-    $c->log->debug(Dumper( @playerupdates ));
-    $c->log->debug("--------------------------------------");
 
     my %serverdata;
     for my $server ( @$serverlist ) {
@@ -264,7 +261,6 @@ sub getserverupdates :Path( "/getserverstatus" ) Chained( . ) Args( 0 ) {
         # process player updates for server - regardless of up or down
         # update looks like this: ServerSwitchEvent#sean_ob#ob-lobby#10/29 18:10:26.1026
         for my $update ( @playerupdates ) {
-            $c->log->debug($servername . " update: " . $update);
             
             my @fields = split( '#', $update );
             if ( defined( $fields[2] ) and $fields[2] eq $servername ) {
@@ -274,19 +270,12 @@ sub getserverupdates :Path( "/getserverstatus" ) Chained( . ) Args( 0 ) {
                         pop @{ $globalstate{ 'playertracker' }{ $servername } };
                     }
                     # get timestamp of event or use current if not there
-                    my $timestamp = gettimestamp();
+                    my $timestamp = substr( gettimestamp(), 0, 14 );
                     if ( defined( $fields[3] ) and $fields[3] ne '' ) {
-                        # clean up the timestamp we got from the web call
-			    #
-		            #   06\/29 09:04:50.450\n
-                        #   06/29 09:04:5
-		            #
-    		    #   06\/29 08:57:29.5729\n
-                        #   06/29 08:57:29
-		            $c->log->debug("debug - pre fix timestamp: " . $fields[3]);
-                        $fields[3] =~ s/\\n//;
-                        $fields[3] =~ s/\\//;
-                        $timestamp = substr( $fields[3], 0, length( $fields[3] ) - ( length( $fields[3] ) - 14 ) );
+                        $timestamp = $fields[3];
+                        $timestamp =~ s/\\n//;
+                        $timestamp =~ s/\\//;
+                        $timestamp = substr( $timestamp, 0, 14 );
                     }
                     unshift @{ $globalstate{ 'playertracker' }{ $servername } }, $timestamp . "#" . $fields[1];
                 }
@@ -474,7 +463,6 @@ sub getplayerupdates :Private {
 
     $offsetplayertrackeronstart = 'false';
 
-    $c->log->debug("puquery: " . $response);
     return $response;
 }
 

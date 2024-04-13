@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+#!/usr/local/bin/perl
 
 BEGIN {
     $ENV{CATALYST_SCRIPT_GEN} = 40;

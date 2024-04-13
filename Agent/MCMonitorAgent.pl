@@ -53,7 +53,7 @@ while ( $stopmonitoring == 0 ) {
             next;
         }
 
-        my $lastchecked = substr( gettimestamp(), 1, length( gettimestamp() ) - 7 );
+        my $lastchecked = substr( gettimestamp(), 0, 14 );
 
         # ping the server to see if it's alive and get some basic ping data back
         my $pingjson; my $pingdata;
