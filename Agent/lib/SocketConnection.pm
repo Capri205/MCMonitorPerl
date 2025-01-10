@@ -8,8 +8,10 @@ use Data::Dumper;
 # minecraft ping
 sub mcping {
     my ( $ip, $port ) = @_;
-    
+
     my $retdata;
+
+    my $protocol_version = 767; # minecraft 1.21
     
     # establish a socket to the target server
     my $socket = new IO::Socket::INET (
@@ -20,15 +22,15 @@ sub mcping {
         Timeout => 1,
     );
     if ( $socket ) {
-#        print "Socket connection established to $ip : $port\n";
-        
+        #print "Socket connection established to $ip : $port\n";
+
         # build basic minecraft server ping
-        my $senddata = "\x00"; # packet id (varint)
-        $senddata .= "\x04"; # protocol version (varint)
-        $senddata .= pack( 'c', length( $ip ) ) . $ip; # server (varint len + UTF-8 addr)
-        $senddata .= pack( 'n', $port ); # server port (unsigned short)
-        $senddata .= "\x01"; # next state: status (varint)
-        $senddata = pack( 'c', length( $senddata ) ) . $senddata; # prepend length of packet ID + data
+        my $packet_data = "\x00"; # packet id (varint)
+        $packet_data .= pack( 's', $protocol_version ); # protocol version (16-bit signed integer)
+        $packet_data .= pack( 'c', length( $ip ) ) . $ip; # server (varint len + UTF-8 addr)
+        $packet_data .= pack( 'n', $port ); # server port (unsigned short)
+        $packet_data .= "\x01"; # next state: status (varint)
+        my $senddata = pack( 'c', length( $packet_data ) ) . $packet_data; # prepend length of packet ID + data
         $senddata .= "\x01\x00";
         $socket->send( $senddata );
 
@@ -43,9 +45,8 @@ sub mcping {
             $retdata .= $datablock;
         }
         
-        
     } else {
-#        print "Failed to make socket connection to $ip : $port\n";
+        #print "Failed to make socket connection to $ip : $port\n";
         $retdata = $@;
         $socket = undef;
     }

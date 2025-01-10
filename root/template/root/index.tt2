@@ -28,6 +28,30 @@
 
     <input type="text" id="handleupdates" value="[% handleupdates %]" hidden>
 
+    <script>
+      document.addEventListener( 'DOMContentLoaded', function() {
+
+        // toggle server updates based on the state flag
+        var state = document.getElementById( "handleupdates" ).value;
+        if ( state == "deactivate" ) {
+      
+          clearInterval( intervalId );
+          intervalId = null;
+      
+        } else if ( state == 'activate' ) {
+      
+          fetchUpdates();
+          intervalId = setInterval( () => fetchUpdates(), 10000 );
+      
+        } else {
+      
+          console.log("invalid get server updates state: " + state);
+          clearInterval( intervalId );
+          intervalId = null;
+        }
+      });
+    </script>
+
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
@@ -88,10 +112,6 @@
       </footer>
   
     </div>
-
-    <script>
-      handleServerUpdates( document.getElementById( "handleupdates" ).value );
-    </script>
 
   </body>
 </html>

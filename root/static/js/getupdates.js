@@ -158,30 +158,3 @@ function fetchUpdates() {
           document.getElementById( "catalystdownsound" ).play();
       });
 }
-
-/*
-** Activate or deactivate timer based server updates
-**
-** @param state - activated or deactivated to toggle updates
-** @resturns - nothing
-*/
-function handleServerUpdates( state ) {
-
-  // toggle server updates basedon the state flag
-  if ( state == "deactivate" ) {
-
-    clearInterval( intervalId );
-    intervalId = null;
-
-  } else if ( state == 'activate' ) {
-
-    fetchUpdates();
-    intervalId = setInterval( () => fetchUpdates(), 10000 );
-
-  } else {
-
-    console.log("invalid get server updates state: " + state);
-    clearInterval( intervalId );
-    intervalId = null;
-  }
-}
