@@ -171,16 +171,18 @@ sub buildcmd {
     my ( $self, $c, $server, $action ) = @_;
 
     my $rtncmd = "/mcserver.sh\ ";
-    if ( $server eq "ob-traincraft" ) {
-        $rtncmd = "ob-traincraft" . $rtncmd . $action;
-    } elsif ( $server eq "ob-orespawn" ) {
-        $rtncmd = "ob-orespawn" . $rtncmd . $action;
-    } elsif ( $server eq "ob-twilight" ) {
-        $rtncmd = "ob-twilight" . $rtncmd . $action;
-    } elsif ( $server eq "ob-lobby" ) {
-        $rtncmd = "ob-lobby" . $rtncmd . $action;
-    } elsif ( $server eq "ob-build" ) {
-        $rtncmd = "ob-build" . $rtncmd . $action;
+    if ( $server eq "traincraft" ) {
+        $rtncmd = "traincraft" . $rtncmd . $action;
+    } elsif ( $server eq "orespawn" ) {
+        $rtncmd = "orespawn" . $rtncmd . $action;
+    } elsif ( $server eq "twilight" ) {
+        $rtncmd = "twilight" . $rtncmd . $action;
+    } elsif ( $server eq "lobby" ) {
+        $rtncmd = "lobby" . $rtncmd . $action;
+    } elsif ( $server eq "build" ) {
+        $rtncmd = "build" . $rtncmd . $action;
+    } elsif ( $server eq "test" ) {
+        $rtncmd = "test" . $rtncmd . $action;
     }
 
     return $rtncmd;

@@ -259,7 +259,7 @@ sub getserverupdates :Path( "/getserverstatus" ) Chained( . ) Args( 0 ) {
         $data{ numconnections } = $server->get_column( 'numconnections' );
 
         # process player updates for server - regardless of up or down
-        # update looks like this: ServerSwitchEvent#sean_ob#ob-lobby#10/29 18:10:26.1026
+        # update looks like this: ServerSwitchEvent#sean_ob#lobby#10/29 18:10:26.1026
         for my $update ( @playerupdates ) {
             
             my @fields = split( '#', $update );
