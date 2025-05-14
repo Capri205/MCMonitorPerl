@@ -77,7 +77,7 @@ sub index :Path :Args(0) {
     # check the monitoring agent is running
     if ( !$self->checkagentstatus( $c ) ) {
         $c->log->error("Error: Monitoring Agent isn't running.");
-        $c->detach( 'agentdown' );
+        $c->detach( 'agentdown_page' );
     }
     $c->log->info("Monitoring Agent appears to be running.");
 
@@ -184,7 +184,7 @@ sub getserverupdates :Path( "/getserverstatus" ) Chained( . ) Args( 0 ) {
     # check web connection
     if ( !$self->checkwebserverstatus( $c ) ) {
         $c->log->error("Error: Web service not available.");
-        my %status = ( 'issue' => 'Web service unavailable! Please check!', 'lastchecked' => gettimestamp() );
+        my %status = ( 'issue' => 'Web service unavailable. Please check', 'lastchecked' => gettimestamp() );
         $c->stash( status => \%status );
         return; 
     }
@@ -505,6 +505,23 @@ sub checkwebserverstatus {
     return $status;
 }
 
+=head2 ajax call to check agent status
+
+=cut
+
+sub check_agent :Path( 'check_agent' ) {
+    my( $self, $c ) = @_;
+
+    $c->log->debug("CHECK_AGENT");
+
+    if ( !$self->checkagentstatus( $c ) ) {
+        $c->log->error("Error: Monitoring Agent still isn't running.");
+        $c->detach( 'agentdown' );
+        return;
+    }
+
+    $c->detach( 'agent_is_up' );
+}
 =head2 check monitoring agent is running
 
 =cut
@@ -525,7 +542,6 @@ sub checkagentstatus {
 , $p->{ cmdline } ) ) {
             $status++;
         }
-
     }
 
     return $status;
@@ -540,6 +556,21 @@ sub webdown :Private {
 
     my %status = ( 'issue' => 'Web service unavailable! Please check!', 'lastchecked' => gettimestamp() );
     $c->stash( status => \%status, template => 'template/root/webdown.tt2' );
+    $c->res->content_type('application/json');
+    $c->res->body(JSON::encode_json(\%status));
+}
+
+=head2 monitoring agent us up
+
+=cut
+
+sub agent_is_up :Private {
+    my( $self, $c ) = @_;
+
+    my %status = ( 'issue' => 'MONRUN' );
+    $c->stash( status => \%status );
+    $c->res->content_type('application/json');
+    $c->res->body(JSON::encode_json(\%status));
 }
 
 =head2 monitoring agent unavailable
@@ -549,8 +580,22 @@ sub webdown :Private {
 sub agentdown :Private {
     my( $self, $c ) = @_;
 
-    my %status = ( 'issue' => 'Monitoring agent unavailable! Please check!', 'lastchecked' => gettimestamp() );
-    $c->stash( status => \%status, template => 'template/root/agentdown.tt2' );
+    my %status = ( 'issue' => 'NO_MONRUN' );
+    $c->stash( status => \%status );
+    $c->res->content_type('application/json');
+    $c->res->body(JSON::encode_json(\%status));
+}
+
+=head2 monitoring agent down page
+
+=cut
+
+sub agentdown_page :Path( '/agentdown_page' ) {
+    my( $self, $c ) = @_;
+
+    my %status = ( message => 'Monitoring agent not running! Please check!', 'lastchecked' => gettimestamp() );
+    $c->stash->{ status } = \%status;
+    $c->stash->{ template } = "template/root/agentdown.tt2";
 }
 
 =head1 AUTHOR

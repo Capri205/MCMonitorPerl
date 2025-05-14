@@ -10,17 +10,15 @@ let intervalId = null;
 */
 function fetchUpdates() {
 
-  fetch( 'getserverupdates' )
+  fetch('getserverupdates')
 
-      .then( response => {
-
-          if ( !response.ok ) {
-              throw new Error(`HTTP error! status: ${ response.status }` )
-          }
-          return response.json();
-      })
-
+      .then(response => response.json())
       .then( data => {
+
+          // check for errors being returned
+          if ( data.issue === "NO_MONRUN" ) {
+              window.location.href = "/agentdown_page";
+          }
 
           // hide error box
           document.getElementById( "errormsg" ).textContent = '';
@@ -53,7 +51,7 @@ function fetchUpdates() {
           }
 
           // Accessing the "jointrackerconcount" section
-          const joinTrackerCount = globalstate.jointrackerconcount["ob-lobby"];
+          const joinTrackerCount = globalstate.jointrackerconcount["lobby"];
 
           // sort servers 
           const serversArray = Object.keys( data ).map( key => ( { name: key, ...data[key] } ) );
@@ -150,7 +148,7 @@ function fetchUpdates() {
           });
       })
       .catch(error => {
-          console.error( 'Error fetching updates:', error + ", " + error.message );
+          console.error( 'Error fetching updates:', error , ", " , error.message );
           document.getElementById( "errormsg" ).textContent = error;
           document.getElementById( "errormsg" ).style.display = 'block';
           document.getElementById( "errorh1" ).style.display = 'block';

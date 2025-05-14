@@ -51,29 +51,24 @@
         <thead>
           <tr>
             <th>
-              Issue
+              <span style="color: whitesmoke;">Issue</span>
             </th>
             <th>
-              LastChecked
+              <span style="color: whitesmoke;">LastChecked</span>
             </th>
           </tr>
         </thead>
         <tbody>
             <tr>
               <td>
-                [% status.issue %]
+                <span style="color: red;">[% status.issue %]</span>
               </td>
               <td>
-                [% status.lastchecked %]
+                <span style="color: red;">[% status.lastchecked %]</span>
               </td>
             </tr>
         </tbody>
       </table>
-
-      <hr />
-      <span class="message">[% status_msg %]</span>
-      <span class="error">[% error_msg %]</span>
-      <hr />
 
       <footer>
         <p>&copy; 2021 - MCMonitor</p>
@@ -82,7 +77,6 @@
     </div>
 
     <script>
-      handleServerUpdates( "deactivate" );
       const audioElement = document.getElementById( "webdown" );
       if (audioElement) {
         audioElement.loop = true;

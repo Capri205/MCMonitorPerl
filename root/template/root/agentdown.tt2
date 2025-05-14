@@ -7,6 +7,10 @@
     <link href="static/css/site.css" rel="stylesheet">
 
     <script src="static/js/modernizr-2.8.3.js"></script>
+    <script src="static/js/jquery-3.4.1.js"></script>
+    <script src="static/js/bootstrap.js"></script>
+    <script src="static/js/darktheme.js"></script>
+    <script src="static/js/checkagent.js"></script>
 
     [% title = "Monitoring Issues Detected" %]
   
@@ -29,6 +33,7 @@
           <ul class="nav navbar-nav">
             <li><a href="monitor">Monitor</a></li>
             <li><a href="servers">Servers</a></li>
+            <li><a>Dark Theme: <label class="switch"><input class="toggle-darktheme" id="toggle-darktheme" type="checkbox"><span class="slider round"></span></label></a></li>
           </ul>
         </div>
       </div>
@@ -44,29 +49,24 @@
         <thead>
           <tr>
             <th>
-              Issue
+              <span style="color: whitesmoke;">Issue</span>
             </th>
             <th>
-              LastChecked
+              <span style="color: whitesmoke;">LastChecked</span>
             </th>
           </tr>
         </thead>
         <tbody>
             <tr>
-              <td>
-                [% status.issue %]
+              <td id="message">
+                <span style="color: red;">[% status.message %]</span>
               </td>
               <td>
-                [% status.lastchecked %]
+                <span style="color: red;">[% status.lastchecked %]</span>
               </td>
             </tr>
         </tbody>
       </table>
-
-      <hr />
-      <span class="message">[% status_msg %]</span>
-      <span class="error">[% error_msg %]</span>
-      <hr />
 
       <footer>
         <p>&copy; 2023 - MCMonitor</p>
@@ -76,9 +76,6 @@
 
     <script src="static/js/jquery-3.4.1.js"></script>
     <script src="static/js/bootstrap.js"></script>
-    <script>
-      handleServerUpdates( "deactivate" );
-    </script>
 
   </body>
 </html>
